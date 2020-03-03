@@ -18,7 +18,7 @@
  */
 
 import { left, right } from './either';
-import { always } from './utils';
+import { always, id } from './utils';
 import { XPACK, STATIC_SITE_URL_PROP_NAME } from './constants';
 
 const maybeTotal = x =>
@@ -66,27 +66,45 @@ export const distro = obj => {
   };
 };
 
-const dropFront = staticSiteUrl =>
-  trimLeftFrom('kibana', staticSiteUrl).replace(/kibana/, '');
 
-const buildFinalUrl = (urlBase, ts, testRunnerType) => trimmed =>
-  `${urlBase}/${ts}/${testRunnerType.toLowerCase()}-combined${trimmed}`;
+const endsInDotJs = /.js$/;
+const appendDotHtml = x => `${x}.html`;
+const maybeAppend = x => endsInDotJs.test(x) ? right(x) : left(x);
+const suffix = x =>
+  maybeAppend(x)
+    .fold(id, appendDotHtml);
+
+const buildFinalUrl = (urlBase, ts, testRunnerType, liveAppPath) => trimmed =>
+  [
+    `${urlBase}/`,
+    ts,
+    `/${liveAppPath}/`,
+    'coverage_data/',
+    `${testRunnerType.toLowerCase()}-combined`,
+    `${suffix(trimmed)}`,
+  ].join('');
 
 const assignUrl = obj => name => value => {
   obj[name] = value;
   return obj;
 };
 
-export const staticSite = urlBase => obj => {
+const captureAfterJobNameAndRootFolder = /.*elastic\+kibana\+code-coverage\/kibana(.*$)/
+const afterJobNameAndRootFolder = x =>
+  captureAfterJobNameAndRootFolder.exec(x)[1];
+const fixFront = x =>
+  afterJobNameAndRootFolder(x);
+
+export const staticSite = (urlBase, liveAppPath) => obj => {
   const { staticSiteUrl, testRunnerType } = obj;
   const ts = obj['@timestamp'];
 
-  const buildFinalStaticSiteUrl = buildFinalUrl(urlBase, ts, testRunnerType);
+  const buildFinalStaticSiteUrl = buildFinalUrl(urlBase, ts, testRunnerType, liveAppPath);
   const assignObj = assignUrl(obj);
   const assignStaticSiteUrl = assignObj(STATIC_SITE_URL_PROP_NAME);
 
   return maybeTotal(staticSiteUrl)
-    .map(dropFront)
+    .map(fixFront)
     .map(buildFinalStaticSiteUrl)
     .fold(always(assignStaticSiteUrl(undefined)), assignStaticSiteUrl);
 

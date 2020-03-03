@@ -20,23 +20,41 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './app';
+import { NoData } from './no_data'
 import * as serviceWorker from './service_worker';
 import { pretty as p } from './utils/pretty';
 import { tryCatch as tc } from './utils/either';
 import './styles/tailwind.css';
 
 const rootEl = document.getElementById.bind(document, 'root');
-const initialData = window.initialData;
+const { initialData } = window;
 const tryInit = () => tc(() => initialData);
 const tryOneProp = () => tc(() => initialData.testRunnerTypes);
 
 tryInit()
   .chain(tryOneProp)
-  .map(boot);
+  .fold(noDataLoaded, boot);
+
+function noDataLoaded() {
+  console.log('\n### NO DATA');
+
+  ReactDOM.render(
+    <NoData />,
+    rootEl()
+  )
+}
 
 function boot(testRunnerTypes) {
-  const { buildStats, historicalItems, currentJobTimeStamp, currentItem, currentCiRunUrl } = initialData;
+  const {
+    buildStats,
+    historicalItems,
+    currentJobTimeStamp,
+    currentItem,
+    currentCiRunUrl,
+  } = initialData;
+
   initPrint(initialData);
+
   ReactDOM.render(
     <App
       testRunnerTypes={testRunnerTypes}

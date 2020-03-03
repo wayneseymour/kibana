@@ -17,4 +17,5 @@
  * under the License.
  */
 
-export const pretty = x => JSON.stringify(x, null, 2);
+const findTimeStampRe = () => /coverage\/(\d*-.*Z)/gm;
+export default item => [...findTimeStampRe().exec(item)][1];
