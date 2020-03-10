@@ -30,14 +30,18 @@ const node = process.env.ES_HOST || 'http://localhost:9200';
 const redacted = redact(node);
 const client = new Client({ node });
 
+const indexName = body =>
+  body.isTotal ? TOTALS_INDEX : COVERAGE_INDEX;
+
 export const ingest = log => async body => {
-  const index = !body.staticSiteUrl ? TOTALS_INDEX : COVERAGE_INDEX;
+  const index = indexName(body);
 
   if (process.env.NODE_ENV === 'integration_test') {
-    log.debug('### Just Logging, not actually sending')
+    log.debug(`### Just Logging, ${green('NOT actually sending')} to [${index}]`);
     logSuccess(log, index, body);
   } else {
     try {
+      log.debug(`### Actually sending to: ${green(index)}`)
       await client.index({ index, body });
       logSuccess(log, index, body);
     } catch (e) {
@@ -47,20 +51,17 @@ export const ingest = log => async body => {
 
 }
 function logSuccess(log, index, body) {
-  log.verbose(`
-### Sent:
+  const logShort = () => `### Sent:
 ### ES HOST (redacted): ${redacted}
-### Index: ${green(index)}
-${pretty(body)}
-`);
+### Index: ${green(index)}`;
+
+logShort();
+log.verbose(pretty(body));
 
   const {staticSiteUrl} = body;
 
-  log.debug(`
-### Sent:
-### Index: ${green(index)}
-### staticSiteUrl: ${staticSiteUrl}
-`);
+  logShort();
+  log.debug(`### staticSiteUrl: ${staticSiteUrl}`);
 }
 function errMsg(index, body, e) {
   const orig = fromNullable(e.body).fold(always(''), () => `### Orig Err:\n${pretty(e.body.error)}`);

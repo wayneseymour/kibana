@@ -1,29 +1,11 @@
 
-def uploadCoverageStaticSite(timestamp) {
-  def uploadPrefix = "kibana-ci-artifacts/jobs/${env.JOB_NAME}/${BUILD_NUMBER}/${timestamp}"
-  def ARTIFACT_PATTERNS = [
-    'target/kibana-*/**/*.png',
-    'target/kibana-*/**/*.css',
-    'target/kibana-*/**/*.html',
-    'target/kibana-*/**/*.js',
-  ]
-
-  withEnv([
-    "GCS_UPLOAD_PREFIX=${uploadPrefix}"
-  ], {
-    ARTIFACT_PATTERNS.each { pattern ->
-      uploadGcsArtifact(uploadPrefix, pattern)
-    }
-  })
-}
-
-def uploadCoverageStaticSite_PROD(timestamp) {
+def uploadCoverageStaticSite(timestamp, liveAppPath) {
   def uploadPrefix = "gs://elastic-bekitzur-kibana-coverage-live/jobs/${env.JOB_NAME}/${timestamp}/"
 
   uploadWithVault(uploadPrefix, 'src/dev/code_coverage/404.html')
-  uploadWithVault(uploadPrefix, 'src/dev/code_coverage/live_coverage_app')
+  uploadWithVault(uploadPrefix, 'src/dev/code_coverage/' + liveAppPath)
 
-  def dataUploadPrefix = uploadPrefix + 'live_coverage_app/'
+  def dataUploadPrefix = uploadPrefix + liveAppPath + '/coverage_data/'
   uploadCoverageHtml(dataUploadPrefix)
 }
 
