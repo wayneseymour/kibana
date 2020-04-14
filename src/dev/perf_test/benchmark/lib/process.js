@@ -17,6 +17,37 @@
  * under the License.
  */
 
+// import execa from 'execa';
+// import * as Rx from 'rxjs';
+// import { getLine$ } from '../../../prs/helpers';
+// import { tap } from 'rxjs/operators';
+
+const KIBANA = 'kibana';
+
 export const prok = externalPath => log => {
   log.verbose(`\n### externalPath: \n\t${externalPath}`);
+  createPath(externalPath);
 };
+
+function createPath(x) {
+  mkdir(`${x}/${KIBANA}`);
+}
+function mkdir(x) {
+  console.log(`\n### mkdir -> x: \n\t${x}`);
+}
+
+// const execInDir = async (cmd: string, args: string[]) => {
+//   log.debug(`$ ${cmd} ${args.join(' ')}`);
+//
+//   const proc = execa(cmd, args, {
+//     cwd: repoDir,
+//     stdio: ['inherit', 'pipe', 'pipe'],
+//   } as any);
+//
+//   await Promise.all([
+//     proc.then(() => log.debug(` - ${cmd} exited with 0`)),
+//     Rx.merge(getLine$(proc.stdout), getLine$(proc.stderr))
+//       .pipe(tap(line => log.debug(line)))
+//       .toPromise(),
+//   ]);
+// };

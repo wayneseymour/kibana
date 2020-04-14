@@ -23,7 +23,12 @@ import { run, createFlagError } from '@kbn/dev-utils';
 
 const ROOT = resolve(__dirname, '../../../..');
 const flags = {
-  string: ['extPath', 'verbose'],
+  string: ['extPath', 'verbose', 'cherryPicks', 'grep', 'gitHead', 'runCount'],
+  boolean: ['kill', 'throttled'],
+  default: {
+    runCount: 1,
+    xpack: true,
+  },
   help: `
 --extPath             Required, path to the directory in which the testing will be performed
         `,
@@ -36,8 +41,8 @@ export function runPerformanceTests() {
       if (flags.verbose) log.verbose(`### Verbose logging enabled`);
 
       const resolveExternalPath = resolve.bind(null, `${ROOT}/../..`);
-      const externalPath = resolveExternalPath(flags.extPath);
-      prok(externalPath)(log);
+      const resolved = resolveExternalPath(flags.extPath);
+      prok(resolved)(log);
     },
     {
       description: `
