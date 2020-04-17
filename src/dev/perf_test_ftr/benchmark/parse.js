@@ -20,23 +20,41 @@
 
 import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { noop } from '../utils/utils';
+import { noop, pretty } from '../utils/utils';
 import { fromNullable } from '../utils/either';
 
 // parse :: string -> obj -> void
-export const parse = line => log => fromNullable(line).fold(noop, stream(log));
+export const parse = rawLine => log => fromNullable(rawLine).fold(noop, stream(log));
 
+const regexes = {
+  succeeded: /a/,
+  failed: /b/,
+  timeMsecs: /c/,
+  timeSecs: /d/,
+  name: /e/,
+};
 function stream(log) {
-  return x =>
-    of(x)
+  return rawLine =>
+    of(rawLine)
       .pipe(
-        map(x => {
-          return x;
-        })
+        map(obj),
+        map(passFail)
         // I THINK WE NEED ANOTHER STREAM TO OBSERVE
         // THAT WILL RUN ALL THE REGEXES, MAYBE
       )
-      .subscribe(x => {
-        log.verbose(`### Test Line: \n${x}\n`);
+      .subscribe(obj => {
+        log.verbose(`### Parsed: \n${pretty(obj)}\n`);
       });
+}
+
+function passFail(obj) {
+  return {
+    ...obj,
+  };
+}
+
+function obj(rawLine) {
+  return {
+    rawLine,
+  };
 }
