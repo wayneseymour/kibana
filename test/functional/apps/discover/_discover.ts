@@ -19,7 +19,6 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const queryBar = getService('queryBar');
   const inspector = getService('inspector');
   const elasticChart = getService('elasticChart');
-  const savedObjects = getService('savedObjects');
   const PageObjects = getPageObjects(['common', 'discover', 'header', 'timePicker']);
 
   const defaultSettings = {
@@ -30,8 +29,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
     before(async function () {
       log.debug('load kibana index with default index pattern');
 
-      await esArchiver.load('empty_kibana');
-      await savedObjects.import('discover');
+      await kibanaServer.savedObjects.clean({ types: ['search'] });
+      await kibanaServer.importExport.load('discover');
 
       // and load a set of makelogs data
       await esArchiver.loadIfNeeded('logstash_functional');
