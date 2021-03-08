@@ -22,7 +22,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('discover uses fields API test', function describeIndexTests() {
     before(async function () {
       log.debug('load kibana index with default index pattern');
-      await esArchiver.load('discover');
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       log.debug('discover');

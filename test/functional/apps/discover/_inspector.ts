@@ -33,7 +33,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('inspect', () => {
     before(async () => {
       await esArchiver.loadIfNeeded('logstash_functional');
-      await esArchiver.load('discover');
+      await kibanaServer.importExport.load('discover');
       // delete .kibana index and update configDoc
       await kibanaServer.uiSettings.replace({
         defaultIndex: 'logstash-*',

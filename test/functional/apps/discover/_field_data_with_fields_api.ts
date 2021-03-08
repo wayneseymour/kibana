@@ -23,7 +23,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
     this.tags('includeFirefox');
     before(async function () {
       await esArchiver.loadIfNeeded('logstash_functional');
-      await esArchiver.load('discover');
+      await kibanaServer.importExport.load('discover');
       await kibanaServer.uiSettings.replace({
         defaultIndex: 'logstash-*',
         'discover:searchFieldsFromSource': false,

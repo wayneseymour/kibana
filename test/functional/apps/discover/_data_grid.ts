@@ -23,7 +23,7 @@ export default function ({
     const testSubjects = getService('testSubjects');
 
     before(async function () {
-      await esArchiver.load('discover');
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');
