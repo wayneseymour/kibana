@@ -127,8 +127,8 @@ export const bulkIngest = (log) => (body) =>
   bulkTask(bulkOptions(body)).fork(handleHttpError(log), handleHttpSuccess(body)(log));
 
 export const justLog = (log) => (list) => {
-  log.verbose(`\n${ccMark} Just logging first item from current (buffered) bulk list`);
-  log.verbose(`\n${ccMark} ${JSON.stringify(list[0], null, 2)}`);
+  log.verbose(`\n${ccMark} Just logging first few items from current (buffered) bulk list`);
+  [0, 1, 2].forEach(x => log.verbose(`\n${ccMark} ${JSON.stringify(list[x], null, 2)}`))
 };
 
 export const parseIndexes = (xs) =>

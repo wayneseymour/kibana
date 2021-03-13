@@ -9,26 +9,57 @@
 /* eslint new-cap: 0 */
 /* eslint no-unused-vars: 0 */
 
+import { exec, execFile } from 'child_process';
+import { promisify } from 'util';
+
 import { pipe } from './utils';
 
 export const Task = (fork) => ({
+  /**
+   * The fn that executes the async computation
+   */
   fork,
+  /**
+   * Functor; Think of this like [].map...you get an array back right?
+   * In this case, you get a Task back
+   */
   map: (f) => Task((rej, res) => fork(rej, pipe(f, res))),
-  chain: (f) => Task((rej, res) => fork(rej, (x) => f(x).fork(rej, res))),
-  fold: (f, g) =>
-    Task((rej, res) =>
-      fork(
-        (x) => f(x).fork(rej, res),
-        (x) => g(x).fork(rej, res)
-      )
-    ),
+  /**
+   * Monad; makes it possible to compose together an `a -> Task b` fn
+   *  with a `b -> Task c` fn,
+   *   and get a `a -> Task c` fn
+   *   instead of `a -> Task Task c`.
+   *   Think of it like [].flatMap.
+   */
+  chain: (f) => {
+    Task((rej, res) => fork(rej, (x) => f(x).fork(rej, res)));
+  },
+  // fold: (leftFn, rightFn) => {
+  //   return Task((rej, res) => {
+  //       return fork(
+  //         (x) => {d
+  //           return leftFn(x).fork(rej, res);
+  //         },
+  //         (x) => {
+  //           return rightFn(x).fork(rej, res);
+  //         },
+  //       );
+  //     }
+  //   )
+  // },
 });
 
 Task.of = (x) => (rej, res) => res(x);
-Task.fromPromised = (fn) => (...args) =>
-  Task((rej, res) =>
-    fn(...args)
-      .then(res)
-      .catch(rej)
+Task.fromPromised = (fn) => (...args) => {
+  return Task((rej, res) => {
+      return fn(...args)
+        .then(x => {
+          return res(x);
+        })
+        .catch(x => {
+          return rej(x);
+        });
+    },
   );
+};
 Task.rejected = (x) => Task((rej, res) => rej(x));

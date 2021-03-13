@@ -10,6 +10,8 @@ import * as either from './either.js';
 import * as maybe from './maybe.js';
 import { always, id, noop, pink, pipe, ccMark } from './utils.js';
 import execa from 'execa';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { resolve } from 'path';
 import { Task } from './task';
 
@@ -59,7 +61,7 @@ const prokForCoverageIndex = (root) => (mutateFalse) => (urlRoot) => (obj) => (s
       return x;
     },
     (x) => x.replace(root, ''),
-    (x) => `${urlRoot}${x}.html`
+    (x) => `${urlRoot}${x}.html`,
   )(siteUrl);
 
 export const staticSite = (urlBase) => (obj) => {
@@ -68,7 +70,7 @@ export const staticSite = (urlBase) => (obj) => {
   const urlRoot = root(urlBase)(ts)(testRunnerType);
   const prokTotal = prokForTotalsIndex(mutateTrue)(urlRoot);
   const prokCoverage = prokForCoverageIndex(COVERAGE_INGESTION_KIBANA_ROOT)(mutateFalse)(urlRoot)(
-    obj
+    obj,
   );
   const prokForBoth = always(maybeTotal(staticSiteUrl).fold(always(prokTotal(obj)), prokCoverage));
 
@@ -118,17 +120,20 @@ const handleFound = (obj) => (grepSuccess) =>
     .map((team) => ({ team, ...obj }));
 
 const grepOpts = { cwd: ROOT_DIR };
-
+const execP = promisify(exec);
+const execTaskFromPromise = Task.fromPromised(execP);
 const assignTeam = (teamAssignmentsPath, coveredFilePath, log, obj) =>
-  Task.fromPromised((opts) => execa('grep', [coveredFilePath, teamAssignmentsPath], opts))(
-    grepOpts
-  ).fork(handleNotFound(log)(obj), handleFound(obj));
+  execTaskFromPromise(`grep ${coveredFilePath} ${teamAssignmentsPath}`)
+    .fork(handleNotFound(log)(obj), handleFound(obj));
 
 export const teamAssignment = (teamAssignmentsPath) => (log) => (obj) => {
-  const { coveredFilePath } = obj;
-  const isTotal = either.fromNullable(obj.isTotal);
+  const { coveredFilePath, isTotal } = obj;
 
-  return isTotal.isRight() ? obj : assignTeam(teamAssignmentsPath, coveredFilePath, log, obj);
+  let res;
+
+  if (isTotal) res = obj;
+  if (!isTotal) res = assignTeam(teamAssignmentsPath, coveredFilePath, log, obj);
+  return res;
 };
 
 export const ciRunUrl = (obj) =>
