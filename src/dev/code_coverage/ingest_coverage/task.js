@@ -6,17 +6,16 @@
  * Side Public License, v 1.
  */
 
-/* eslint new-cap: 0 */
 /* eslint no-unused-vars: 0 */
 
 import { pipe } from './utils';
 
-export const Task = (fork) => ({
+export const task = (fork) => ({
   fork,
-  map: (f) => Task((rej, res) => fork(rej, pipe(f, res))),
-  chain: (f) => Task((rej, res) => fork(rej, (x) => f(x).fork(rej, res))),
+  map: (f) => task((rej, res) => fork(rej, pipe(f, res))),
+  chain: (f) => task((rej, res) => fork(rej, (x) => f(x).fork(rej, res))),
   fold: (f, g) =>
-    Task((rej, res) =>
+    task((rej, res) =>
       fork(
         (x) => f(x).fork(rej, res),
         (x) => g(x).fork(rej, res)
@@ -24,11 +23,11 @@ export const Task = (fork) => ({
     ),
 });
 
-Task.of = (x) => (rej, res) => res(x);
-Task.fromPromised = (fn) => (...args) =>
-  Task((rej, res) =>
+task.of = (x) => (rej, res) => res(x);
+task.fromPromised = (fn) => (...args) =>
+  task((rej, res) =>
     fn(...args)
       .then(res)
       .catch(rej)
   );
-Task.rejected = (x) => Task((rej, res) => rej(x));
+task.rejected = (x) => task((rej, res) => rej(x));

@@ -8,92 +8,49 @@
 
 import request from 'request';
 import superagent from 'superagent';
-import { promisify } from 'util';
-import { Task } from '../task';
-import { exec } from 'child_process';
-import { REPO_ROOT } from '@kbn/dev-utils';
-import { join } from 'path';
 
-const id = (x) => x;
+import { task } from '../task';
+import { promisify } from 'util';
+import { pipe } from '../utils';
+import { exec } from 'child_process';
 
 describe(`task monad`, () => {
-  const body = (x) => x.body;
   const url = 'https://jsonplaceholder.typicode.com/users/1/todos';
-  it(`should eval when fork is called`, () => {
-    Task((rej, res) => {
-      setTimeout(() => {
-        res(1);
-      }, 5000);
-    })
-      .map((one) => one + 2)
-      .map((three) => three * 2)
-      .fork(x => console.error(`\n### x: \n\t${x}`), (x) => {
-        expect(x).toBe(7);
-      });
-  });
-  it(`should not eval until fork is called (assign to var and eval later)`, () => {
-    const deferred = Task((rej, res) => {
-      setTimeout(() => {
-        res(1);
-      }, 5000);
-    })
-      .map((one) => one + 2)
-      .map((three) => three * 2);
-
-    deferred
-      .fork(x => console.error(`\n### x: \n\t${x}`), (x) => {
-        expect(x).toBe(7);
-      });
-  });
-  describe(`'of' fn`, () => {
-    it(`should ???`, () => {
-
-    });
-  });
+  const body = (x) => x.body;
+  const first = (xs) => xs[0];
+  const title = (x) => x.title;
+  const throwNew = (e) => {
+    throw new Error(e);
+  };
   describe(`used with a fn expecting an async callback`, () => {
     it(`should handle the payload in the fork functions's resolve fn (the second arg to .fork)`, () => {
-      Task((reject, resolve) => request(url, (err, data) => (err ? reject(err) : resolve(data))))
-        .map(body)
-        .fork(console.error, (x) => expect(x).toBeTruthy());
+      task((reject, resolve) => request(url, (err, data) => (err ? reject(err) : resolve(data))))
+        .map(pipe(body, JSON.parse, first, title))
+        .fork(throwNew, (x) => expect(x).toBe('delectus aut autem'));
     });
   });
   describe(`used with a promise fn`, () => {
+    it(`should handle success in the resolve handler`, () => {
+      const execP = promisify(exec);
+      const exectaskFromPromise = task.fromPromised(execP);
+      const grepCmd =
+        'grep x-pack/plugins/lens/public/editor_frame_service/editor_frame/save.ts src/dev/code_coverage/ingest_coverage/__tests__/mocks/team_assign_mock.txt';
+      const grep = exectaskFromPromise(grepCmd);
+
+      grep
+        .map(pipe((x) => x.stdout, (x) => x.trim()))
+        .fork(throwNew, (x) => {
+          expect(x).toBe(
+            'x-pack/plugins/lens/public/editor_frame_service/editor_frame/save.ts kibana-app'
+          );
+        });
+    });
     describe(`that calls a bad url`, () => {
       it(`should handle the error in the rejected handler`, () => {
-        Task.fromPromised((x) => superagent.get(x))('http://stop.com').fork(
-          (e) => expect(e).toBeTruthy(),
-          id,
-        );
-      });
-      describe(`that evals successfuly`, () => {
-        const execP = promisify(exec);
-        const lsTaskFromPromise = Task.fromPromised(execP);
-        it(`should handle the success in the resolve fn`, () => {
-          lsTaskFromPromise(`ls ${join(REPO_ROOT, 'package.json')}`)
-            .map(x => x.stdout)
-            .map(x => x.trim())
-            .fork(throwLeftFn, x => {
-              expect(x).toBe('/Users/tre/development/projects/kibana/package.json');
-            });
-        });
-        describe(`and is used as a var`, () => {
-          it(`should still handle the success in the resolve fn`, () => {
-            const aTask = lsTaskFromPromise(`ls ${join(REPO_ROOT, 'package.json')}`)
-              .map(x => x.stdout)
-              .map(x => x.trim())
-
-            aTask
-              .fork(throwLeftFn, x => {
-                expect(x).toBe('/Users/tre/development/projects/kibana/package.json');
-              });
-
-          });
-        });
+        task
+          .fromPromised((x) => superagent.get(x))('http://stop.com')
+          .fork((e) => expect(e.code).toBe('ENOTFOUND'), throwNew);
       });
     });
   });
 });
-
-function throwLeftFn (x) {
-  throw new Error(x);
-}
