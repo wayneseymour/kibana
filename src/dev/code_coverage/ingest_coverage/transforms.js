@@ -129,11 +129,13 @@ const assignTeam = (teamAssignmentsPath, coveredFilePath, log, obj) =>
 export const teamAssignment = (teamAssignmentsPath) => (log) => (obj) => {
   const { coveredFilePath, isTotal } = obj;
 
-  let res;
-
-  if (isTotal) res = obj;
-  if (!isTotal) res = assignTeam(teamAssignmentsPath, coveredFilePath, log, obj);
-  return res;
+  if (isTotal) return obj;
+  if (!isTotal) return assignTeam(teamAssignmentsPath, coveredFilePath, log, obj)
+    .then(x => {
+      console.log(`\n### coveredFilePath: \n\t${coveredFilePath}`);
+      console.log(`\n### teamAssignmentsPath: \n\t${teamAssignmentsPath}`);
+      return x;
+    })
 };
 
 export const ciRunUrl = (obj) =>
