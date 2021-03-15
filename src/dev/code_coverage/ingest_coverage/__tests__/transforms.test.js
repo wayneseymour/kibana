@@ -11,12 +11,15 @@ import {
   coveredFilePath,
   itemizeVcs,
   prokPrevious,
-  teamAssignment,
+  teamAssignmentTask,
   last,
 } from '../transforms';
 import { ToolingLog } from '@kbn/dev-utils';
 
 describe(`Transform fns`, () => {
+  const throwNew = (e) => {
+    throw new Error(e);
+  };
   describe(`ciRunUrl`, () => {
     it(`should add the url when present in the environment`, () => {
       process.env.CI_RUN_URL = 'blah';
@@ -91,19 +94,15 @@ describe(`Transform fns`, () => {
 
     describe(`with a coveredFilePath of ${coveredFilePath}`, () => {
       const expected = 'kibana-reporting';
-      it(`should resolve to ${expected}`, async () => {
-        const actual = await teamAssignment(teamAssignmentsPathMOCK)(log)(obj);
-        const { team } = actual;
-        expect(team).toEqual(expected);
-      });
-    });
-
-    describe(`with a coveredFilePath of src/plugins/charts/public/static/color_maps/color_maps.ts`, () => {
-      const expected = 'kibana-reporting';
-      it(`should resolve to ${expected}`, async () => {
-        const actual = await teamAssignment(teamAssignmentsPathMOCK)(log)(obj);
-        const { team } = actual;
-        expect(team).toEqual(expected);
+      it(`should resolve to ${expected}`, () => {
+        teamAssignmentTask(teamAssignmentsPathMOCK)(log)(obj)
+          .map(x => x.split(' '))
+          .map(xs => xs[1])
+          .map(x => x.trim())
+          .fork(
+            throwNew,
+            (team) => expect(team).toBe(expected)
+          );
       });
     });
 

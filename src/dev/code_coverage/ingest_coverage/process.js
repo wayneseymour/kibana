@@ -21,7 +21,7 @@ import {
   coveredFilePath,
   ciRunUrl,
   itemizeVcs,
-  teamAssignment,
+  teamAssignmentTask,
 } from './transforms';
 import { resolve } from 'path';
 import { createReadStream } from 'fs';
@@ -41,7 +41,7 @@ const addPrePopulatedTimeStamp = addTimeStamp(process.env.TIME_STAMP || formatte
 const transform = (jsonSummaryPath) => (log) => (vcsInfo) => (teamAssignmentsPath) => {
   const objStream = jsonStream(jsonSummaryPath).on('done', noop);
   const itemizeVcsInfo = itemizeVcs(vcsInfo);
-  const assignTeams = teamAssignment(teamAssignmentsPath)(log);
+  // const assignTeams = teamAssignment(teamAssignmentsPath)(log);
 
   const jsonSummary$ = (_) => objStream.on('node', '!.*', _);
 
@@ -59,7 +59,18 @@ const transform = (jsonSummaryPath) => (log) => (vcsInfo) => (teamAssignmentsPat
           addJsonSummaryPath(jsonSummaryPath),
           testRunner,
           staticSite(staticSiteUrlBase),
-          assignTeams
+          // HOW TO PUT A TASK IN HERE?
+          obj => {
+            teamAssignmentTask(teamAssignmentsPath)(log)(obj)
+              .fork(
+                (rejected) => {
+                  console.error(`\n### x: \n\t${x}`)
+                },
+                (resolved) => {
+                  return x;
+                }
+              );
+          }
         )
       ),
       bufferCount(BUFFER_SIZE)

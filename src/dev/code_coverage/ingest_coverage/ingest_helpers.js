@@ -17,7 +17,7 @@ import {
   RESEARCH_TOTALS_INDEX,
   TOTALS_INDEX,
 } from './constants';
-import { Task } from './task';
+import { task } from './task';
 import { pluckIndex } from './transforms';
 
 const { Client } = require('@elastic/elasticsearch');
@@ -75,7 +75,7 @@ function whichCoverageIndex(isResearchJob) {
 
 const node = process.env.ES_HOST || 'http://localhost:9200';
 const client = new Client({ node });
-export const bulkTask = Task.fromPromised(async (opts) => await client.bulk(opts));
+export const bulkTask = task.fromPromised(async (opts) => await client.bulk(opts));
 
 export const isNodeEnvDeclared = (xs) => (process.env.NODE_ENV ? left(xs) : right(xs));
 

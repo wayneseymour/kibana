@@ -9,9 +9,10 @@
 import * as either from './either.js';
 import * as maybe from './maybe.js';
 import { always, id, noop, pink, pipe, ccMark } from './utils.js';
-import execa from 'execa';
 import { resolve } from 'path';
-import { Task } from './task';
+import { task } from './task';
+import { promisify } from 'util';
+import { exec } from 'child_process';
 
 const ROOT_DIR = resolve(__dirname, '../../../..');
 
@@ -104,7 +105,7 @@ export const pluckIndex = (idx) => (xs) => xs[idx];
 
 const pluckTeam = pluckIndex(1);
 
-const handleNotFound = (log) => (obj) => () => {
+const handleNotFound = (log) => (obj) => (coveredFilePath) => {
   maybe
     .fromNullable(process.env.LOG_NOT_FOUND)
     .map(() => log.error(`\n${ccMark} Unknown Team for path: \n\t\t${pink(coveredFilePath)}\n`));
@@ -117,18 +118,22 @@ const handleFound = (obj) => (grepSuccess) =>
     .map(pipe(last, findTeam, pluckTeam))
     .map((team) => ({ team, ...obj }));
 
-const grepOpts = { cwd: ROOT_DIR };
+// ).fork(handleNotFound(log)(obj), handleFound(obj));
 
-const assignTeam = (teamAssignmentsPath, coveredFilePath, log, obj) =>
-  Task.fromPromised((opts) => execa('grep', [coveredFilePath, teamAssignmentsPath], opts))(
-    grepOpts
-  ).fork(handleNotFound(log)(obj), handleFound(obj));
-
-export const teamAssignment = (teamAssignmentsPath) => (log) => (obj) => {
+export const teamAssignmentTask = (teamAssignmentsPath) => (log) => (obj) => {
   const { coveredFilePath } = obj;
   const isTotal = either.fromNullable(obj.isTotal);
 
-  return isTotal.isRight() ? obj : assignTeam(teamAssignmentsPath, coveredFilePath, log, obj);
+  const grepString = `grep ${coveredFilePath} ${teamAssignmentsPath}`;
+  return isTotal.isRight()
+    ? task.of(obj)
+    : task((rej, res) => {
+        exec(grepString, { cwd: ROOT_DIR }, (error, stdout, stderr) => {
+          if (error) rej(error);
+          if (stdout) res(stdout);
+          if (stderr) rej(stderr);
+        });
+      });
 };
 
 export const ciRunUrl = (obj) =>
