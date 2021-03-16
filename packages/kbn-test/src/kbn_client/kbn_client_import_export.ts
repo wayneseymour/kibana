@@ -80,8 +80,10 @@ export class KbnClientImportExport {
     if (resp.data.success) {
       this.log.success('import success');
     } else {
-    //   throw createFailError(`failed to import all saved objects: ${inspect(resp.data)}`);
-      throw createFailError(`failed to import all saved objects: ${JSON.stringify(resp.data, null, 2)}`);
+      //   throw createFailError(`failed to import all saved objects: ${inspect(resp.data)}`);
+      throw createFailError(
+        `failed to import all saved objects: ${JSON.stringify(resp.data, null, 2)}`
+      );
     }
   }
 
