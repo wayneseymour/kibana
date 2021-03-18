@@ -29,11 +29,10 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
     before(async function () {
       log.debug('load kibana index with default index pattern');
 
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
+      await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
+      await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
       await kibanaServer.importExport.load('discover');
 
-      // and load a set of makelogs data
-      await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');
       await PageObjects.timePicker.setDefaultAbsoluteRange();
