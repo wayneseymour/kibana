@@ -14,6 +14,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
   const log = getService('log');
   const retry = getService('retry');
+  const security = getService('security');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
   const queryBar = getService('queryBar');
@@ -29,14 +30,20 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
     before(async function () {
       log.debug('load kibana index with default index pattern');
 
+      await security.testUser.setRoles(['superuser'], false);
       await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
-      await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
       await kibanaServer.importExport.load('discover');
+      await security.testUser.restoreDefaults(false);
+      await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
 
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');
       await PageObjects.timePicker.setDefaultAbsoluteRange();
     });
+
+    // after(async function() {
+    //   await security.testUser.restoreDefaults();
+    // })
 
     describe('query', function () {
       const queryName1 = 'Query # 1';
