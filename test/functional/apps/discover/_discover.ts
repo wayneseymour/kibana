@@ -7,14 +7,16 @@
  */
 
 import expect from '@kbn/expect';
-
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { FtrProviderContext } from '../../ftr_provider_context';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
   const log = getService('log');
+  const supertest = getService('supertest');
   const retry = getService('retry');
-  const security = getService('security');
+  // const security = getService('security');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
   const queryBar = getService('queryBar');
@@ -27,23 +29,39 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   };
 
   describe('discover test', function describeIndexTests() {
+    const finalDirAndFile = (destDir: string) => (filePath: string = 'exported.ndjson') => {
+      const destFilePath = join(destDir, filePath);
+      return [destDir, destFilePath];
+    };
+
+    const importData = async (srcFilePath: string) =>
+      await supertest
+        .post('/api/saved_objects/_import')
+        .query({ overwrite: true })
+        .set('kbn-xsrf', 'anything')
+        .attach('file', readFileSync(srcFilePath), srcFilePath)
+        .expect(200)
+        .then(() => log.info(`import successful of ${srcFilePath}`))
+        .catch((err: any) => log.error(`caught error - import response: \n\t${err.message}`));
+
     before(async function () {
       log.debug('load kibana index with default index pattern');
 
-      await security.testUser.setRoles(['superuser'], false);
-      await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
-      await kibanaServer.importExport.load('discover');
-      await security.testUser.restoreDefaults(false);
+      // await security.testUser.setRoles(['superuser'], false);
+      // await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      const from = join('test/functional/fixtures/exported_saved_objects', 'discover');
+      const [, inputFilePath] = finalDirAndFile(from)();
+
+      await importData(inputFilePath);
+      // await security.testUser.restoreDefaults(false);
       await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
 
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');
       await PageObjects.timePicker.setDefaultAbsoluteRange();
     });
-
-    // after(async function() {
-    //   await security.testUser.restoreDefaults();
-    // })
 
     describe('query', function () {
       const queryName1 = 'Query # 1';

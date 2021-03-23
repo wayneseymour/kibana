@@ -18,14 +18,12 @@ import { KbnClientSavedObjects } from './kbn_client_saved_objects';
 
 interface ImportApiResponse {
   success: boolean;
-
   [key: string]: unknown;
 }
 
 interface SavedObject {
   id: string;
   type: string;
-
   [key: string]: unknown;
 }
 
@@ -82,13 +80,7 @@ export class KbnClientImportExport {
     if (resp.data.success) {
       this.log.success('import success');
     } else {
-      // throw createFailError(`failed to import all saved objects: ${inspect(resp.data)}`);
-      throw createFailError(
-        `
-TEMP: failed to import all saved objects: ${JSON.stringify(resp.data, null, 2)}
-TEMP: Headers: ${JSON.stringify(resp.headers, null, 2)}
-`
-      );
+      throw createFailError(`failed to import all saved objects: ${inspect(resp.data)}`);
     }
   }
 
