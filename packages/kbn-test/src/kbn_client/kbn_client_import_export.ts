@@ -83,11 +83,6 @@ export class KbnClientImportExport {
       this.log.success('import success');
     } else {
       // throw createFailError(`failed to import all saved objects: ${inspect(resp.data)}`);
-      this.log.debug('\n### formData members');
-      for (const a in formData) {
-        if (formData.hasOwnProperty(a)) this.log.debug(`\n### formData prop: \n${JSON.stringify(a, null, 2)}`);
-      }
-
       throw createFailError(
         `
 TEMP: failed to import all saved objects: ${JSON.stringify(resp.data, null, 2)}
