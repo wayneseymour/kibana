@@ -9,6 +9,7 @@
 import expect from '@kbn/expect';
 
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const retry = getService('retry');
@@ -19,6 +20,7 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
   const toasts = getService('toasts');
   const deployment = getService('deployment');
+  const supertest = getService('supertest');
 
   describe('shared links', function describeIndexTests() {
     let baseUrl: string;
@@ -37,8 +39,10 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
       });
 
       log.debug('load kibana index with default index pattern');
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       await esArchiver.loadIfNeeded('logstash_functional');
 
       await kibanaServer.uiSettings.replace({

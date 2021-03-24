@@ -9,19 +9,24 @@
 import expect from '@kbn/expect';
 
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const docTable = getService('docTable');
   const filterBar = getService('filterBar');
   const testSubjects = getService('testSubjects');
+  const supertest = getService('supertest');
+  const log = getService('log');
   const PageObjects = getPageObjects(['common', 'discover', 'timePicker', 'context']);
   const esArchiver = getService('esArchiver');
   const retry = getService('retry');
 
   describe('doc link in discover', function contextSize() {
     beforeEach(async function () {
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
+      // await esArchiver.loadIfNeeded('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
-      await esArchiver.loadIfNeeded('discover');
       await PageObjects.timePicker.setDefaultAbsoluteRangeViaUiSettings();
       await PageObjects.common.navigateToApp('discover');
       await PageObjects.discover.waitForDocTableLoadingComplete();

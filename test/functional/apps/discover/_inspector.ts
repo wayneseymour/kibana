@@ -9,11 +9,14 @@
 import expect from '@kbn/expect';
 
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const PageObjects = getPageObjects(['common', 'visualize', 'timePicker']);
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
+  const supertest = getService('supertest');
+  const log = getService('log');
   const inspector = getService('inspector');
 
   const STATS_ROW_NAME_INDEX = 0;
@@ -32,8 +35,10 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
 
   describe('inspect', () => {
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       await esArchiver.loadIfNeeded('logstash_functional');
       // delete .kibana index and update configDoc
       await kibanaServer.uiSettings.replace({

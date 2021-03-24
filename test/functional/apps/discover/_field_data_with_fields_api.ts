@@ -9,6 +9,7 @@
 import expect from '@kbn/expect';
 
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const retry = getService('retry');
@@ -16,14 +17,18 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const kibanaServer = getService('kibanaServer');
   const toasts = getService('toasts');
   const queryBar = getService('queryBar');
+  const supertest = getService('supertest');
+  const log = getService('log');
   const browser = getService('browser');
   const PageObjects = getPageObjects(['common', 'header', 'discover', 'visualize', 'timePicker']);
 
   describe('discover tab with new fields API', function describeIndexTests() {
     this.tags('includeFirefox');
     before(async function () {
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace({
         defaultIndex: 'logstash-*',

@@ -8,6 +8,7 @@
 
 import expect from '@kbn/expect';
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 const TEST_COLUMN_NAMES = ['@message'];
 const TEST_FILTER_COLUMN_NAMES = [
@@ -33,12 +34,16 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const esArchiver = getService('esArchiver');
   const dashboardAddPanel = getService('dashboardAddPanel');
   const browser = getService('browser');
+  const supertest = getService('supertest');
+  const log = getService('log');
 
   // FLAKY: https://github.com/elastic/kibana/issues/94545
   describe.skip('discover data grid context tests', () => {
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       await esArchiver.loadIfNeeded('logstash_functional');
       await PageObjects.timePicker.setDefaultAbsoluteRangeViaUiSettings();
       await kibanaServer.uiSettings.update(defaultSettings);

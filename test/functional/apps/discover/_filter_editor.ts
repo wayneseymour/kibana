@@ -9,6 +9,7 @@
 import expect from '@kbn/expect';
 
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const log = getService('log');
@@ -17,6 +18,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const kibanaServer = getService('kibanaServer');
   const filterBar = getService('filterBar');
   const PageObjects = getPageObjects(['common', 'discover', 'timePicker']);
+  const supertest = getService('supertest');
+
   const defaultSettings = {
     defaultIndex: 'logstash-*',
   };
@@ -24,9 +27,10 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('discover filter editor', function describeIndexTests() {
     before(async function () {
       log.debug('load kibana index with default index pattern');
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
-
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       // and load a set of makelogs data
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);

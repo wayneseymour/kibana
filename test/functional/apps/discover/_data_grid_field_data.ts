@@ -8,6 +8,7 @@
 
 import expect from '@kbn/expect';
 import { FtrProviderContext } from '../../ftr_provider_context';
+import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const retry = getService('retry');
@@ -18,12 +19,16 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const PageObjects = getPageObjects(['common', 'header', 'discover', 'visualize', 'timePicker']);
   const defaultSettings = { defaultIndex: 'logstash-*', 'doc_table:legacy': false };
   const dataGrid = getService('dataGrid');
+  const supertest = getService('supertest');
+  const log = getService('log');
 
   describe('discover data grid field data tests', function describeIndexTests() {
     this.tags('includeFirefox');
     before(async function () {
-      await kibanaServer.savedObjects.clean({ types: ['search'] });
-      await kibanaServer.importExport.load('discover');
+      // await kibanaServer.savedObjects.clean({ types: ['search'] });
+      // await kibanaServer.importExport.load('discover');
+      await esArchiver.load('empty_kibana');
+      await importData('discover')(supertest)(log);
       await esArchiver.loadIfNeeded('logstash_functional');
       await PageObjects.timePicker.setDefaultAbsoluteRangeViaUiSettings();
       await kibanaServer.uiSettings.update(defaultSettings);
