@@ -8,10 +8,8 @@
 
 import expect from '@kbn/expect';
 import { FtrProviderContext } from './ftr_provider_context';
-import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
-  const supertest = getService('supertest');
   const log = getService('log');
   const retry = getService('retry');
   const esArchiver = getService('esArchiver');
@@ -24,10 +22,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('discover uses fields API test', function describeIndexTests() {
     before(async function () {
       log.debug('load kibana index with default index pattern');
-      // await kibanaServer.savedObjects.clean({ types: ['search'] });
-      // await kibanaServer.importExport.load('discover');
-      await esArchiver.load('empty_kibana');
-      await importData('discover')(supertest)(log);
+      await kibanaServer.savedObjects.clean({ types: ['search'] });
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       log.debug('discover');

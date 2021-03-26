@@ -7,7 +7,6 @@
  */
 
 import expect from '@kbn/expect';
-import { importData } from '../../utils/import_data';
 
 export default function ({
   getService,
@@ -17,8 +16,6 @@ export default function ({
   getPageObjects: (pageObjects: string[]) => any;
 }) {
   describe('discover data grid tests', function describeDiscoverDataGrid() {
-    const supertest = getService('supertest');
-    const log = getService('log');
     const esArchiver = getService('esArchiver');
     const PageObjects = getPageObjects(['common', 'discover', 'timePicker']);
     const kibanaServer = getService('kibanaServer');
@@ -26,10 +23,8 @@ export default function ({
     const testSubjects = getService('testSubjects');
 
     before(async function () {
-      // await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
-      // await kibanaServer.importExport.load('discover');
-      await esArchiver.load('empty_kibana');
-      await importData('discover')(supertest)(log);
+      await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');

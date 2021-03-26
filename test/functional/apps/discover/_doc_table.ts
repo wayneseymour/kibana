@@ -8,12 +8,10 @@
 
 import expect from '@kbn/expect';
 import { FtrProviderContext } from '../../ftr_provider_context';
-import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const log = getService('log');
   const retry = getService('retry');
-  const supertest = getService('supertest');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
   const docTable = getService('docTable');
@@ -29,10 +27,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
 
     before(async function () {
       log.debug('load kibana index with default index pattern');
-      // await kibanaServer.savedObjects.clean({ types: ['search'] });
-      // await kibanaServer.importExport.load('discover');
-      await esArchiver.load('empty_kibana');
-      await importData('discover')(supertest)(log);
+      await kibanaServer.savedObjects.clean({ types: ['search'] });
+      await kibanaServer.importExport.load('discover');
 
       // and load a set of makelogs data
       await esArchiver.loadIfNeeded('logstash_functional');

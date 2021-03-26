@@ -8,13 +8,11 @@
 
 import expect from '@kbn/expect';
 import { FtrProviderContext } from '../../ftr_provider_context';
-import { importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const find = getService('find');
   const dataGrid = getService('dataGrid');
   const log = getService('log');
-  const supertest = getService('supertest');
   const retry = getService('retry');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
@@ -28,10 +26,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('discover data grid doc table', function describeIndexTests() {
     before(async function () {
       log.debug('load kibana index with default index pattern');
-      // await kibanaServer.savedObjects.clean({ types: ['search'] });
-      // await kibanaServer.importExport.load('discover');
-      await esArchiver.load('empty_kibana');
-      await importData('discover')(supertest)(log);
+      await kibanaServer.savedObjects.clean({ types: ['search'] });
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.timePicker.setDefaultAbsoluteRangeViaUiSettings();

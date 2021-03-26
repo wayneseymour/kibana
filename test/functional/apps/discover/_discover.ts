@@ -7,8 +7,9 @@
  */
 
 import expect from '@kbn/expect';
+import { join } from 'path';
 import { FtrProviderContext } from '../../ftr_provider_context';
-import { importData } from '../../utils/import_data';
+import { dirFile, importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
@@ -35,7 +36,10 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
       // await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
       // await kibanaServer.importExport.load('discover');
       await esArchiver.load('empty_kibana');
-      await importData('discover')(supertest)(log);
+      const [, inputFilePath] = dirFile(
+        join('test/functional/fixtures/exported_saved_objects', 'discover')
+      )();
+      await importData(inputFilePath)(supertest)(log);
       // await security.testUser.restoreDefaults(false);
       await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
 
