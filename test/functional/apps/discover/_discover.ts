@@ -33,13 +33,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
       log.debug('load kibana index with default index pattern');
 
       // await security.testUser.setRoles(['superuser'], false);
-      // await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
-      // await kibanaServer.importExport.load('discover');
-      await esArchiver.load('empty_kibana');
-      const [, inputFilePath] = dirFile(
-        join('test/functional/fixtures/exported_saved_objects', 'discover')
-      )();
-      await importData(inputFilePath)(supertest)(log);
+      await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
+      await kibanaServer.importExport.load('discover');
       // await security.testUser.restoreDefaults(false);
       await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
 
