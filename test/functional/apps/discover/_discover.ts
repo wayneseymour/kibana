@@ -7,16 +7,13 @@
  */
 
 import expect from '@kbn/expect';
-import { join } from 'path';
+
 import { FtrProviderContext } from '../../ftr_provider_context';
-import { dirFile, importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
   const browser = getService('browser');
   const log = getService('log');
-  const supertest = getService('supertest');
   const retry = getService('retry');
-  // const security = getService('security');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
   const queryBar = getService('queryBar');
@@ -32,12 +29,11 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
     before(async function () {
       log.debug('load kibana index with default index pattern');
 
-      // await security.testUser.setRoles(['superuser'], false);
       await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
       await kibanaServer.importExport.load('discover');
-      // await security.testUser.restoreDefaults(false);
-      await esArchiver.loadIfNeeded('logstash_functional'); // and load a set of makelogs data
 
+      // and load a set of makelogs data
+      await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace(defaultSettings);
       await PageObjects.common.navigateToApp('discover');
       await PageObjects.timePicker.setDefaultAbsoluteRange();

@@ -8,13 +8,9 @@
 
 import expect from '@kbn/expect';
 
-import { join } from 'path';
 import { FtrProviderContext } from '../../ftr_provider_context';
-import { dirFile, importData } from '../../utils/import_data';
 
 export default function ({ getService, getPageObjects }: FtrProviderContext) {
-  const supertest = getService('supertest');
-  const log = getService('log');
   const retry = getService('retry');
   const esArchiver = getService('esArchiver');
   const kibanaServer = getService('kibanaServer');
@@ -26,12 +22,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
   describe('discover tab', function describeIndexTests() {
     this.tags('includeFirefox');
     before(async function () {
-      const [, inputFilePath] = dirFile(
-        join('test/functional/fixtures/exported_saved_objects', 'discover')
-      )();
-      await importData(inputFilePath)(supertest)(log);
-      // await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
-      // await kibanaServer.importExport.load('discover');
+      await kibanaServer.savedObjects.clean({ types: ['search', 'index-pattern'] });
+      await kibanaServer.importExport.load('discover');
       await esArchiver.loadIfNeeded('logstash_functional');
       await kibanaServer.uiSettings.replace({
         defaultIndex: 'logstash-*',
