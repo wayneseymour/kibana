@@ -11,6 +11,3 @@ is_test_execution_step
 
 echo '--- Jest code coverage'
 .buildkite/scripts/steps/code_coverage/jest_parallel.sh jest.config.js
-
-# So the last step "knows" this config ran
-uploadRanFile "jest"
