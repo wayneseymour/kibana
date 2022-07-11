@@ -8,13 +8,13 @@
 
 require('../src/setup_node_env');
 
-const yaml = require('js-yaml');
-const fs   = require('fs');
+var yaml = require('js-yaml');
+var fs = require('fs');
 
 try {
-  const doc = yaml.load(fs.readFileSync('.buildkite/ftr_configs.yml', 'utf8'));
-  // console.log(doc.disabled);
-  doc.enabled.forEach(x => console.log(x))
+  yaml.load(fs.readFileSync('.buildkite/ftr_configs.yml', 'utf8')).enabled.forEach(function (x) {
+    console.log(x);
+  });
 } catch (e) {
   console.log(e);
 }
