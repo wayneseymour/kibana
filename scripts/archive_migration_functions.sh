@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # ??? Should we migrate
-#     x-pack/test/functional/es_archives/logstash/example_pipelines
+#     x-pack/test/functional/es_archives/security_solution/import_rule_connector
 # !!! No, we've found 0 saved objects that are listed in the standard_list
 # !!! It contains the following saved object(s)
-#     config
+#     action
 #     space
 
 standard_list="url,index-pattern,query,graph-workspace,tag,visualization,canvas-element,canvas-workpad,dashboard,search,lens,map,cases,uptime-dynamic-settings,osquery-saved-query,osquery-pack,infrastructure-ui-source,metrics-explorer-view,inventory-view,infrastructure-monitoring-log-view,apm-indices"
