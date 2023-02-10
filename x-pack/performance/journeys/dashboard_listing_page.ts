@@ -14,8 +14,11 @@ export const journey = new Journey({
     'x-pack/performance/kbn_archives/flights_no_map_dashboard',
     'x-pack/performance/kbn_archives/logs_no_map_dashboard',
   ],
+  extendContext: ({page}) => ({
+    page2: page,
+  })
 })
-  .step('Go to Dashboards Page', async ({ page, kbnUrl }) => {
+  .step('Go to Dashboards Page', async ({ page, kbnUrl, page2 }) => {
     await page.goto(kbnUrl.get(`/app/dashboards`));
     await page.waitForSelector(`[data-test-subj="table-is-ready"]`);
   })
