@@ -6,7 +6,12 @@
  * Side Public License, v 1.
  */
 
-export { createIndexDocRecordsStream, createGenerateDocRecordsStream } from './docs';
+export {
+  createIndexDocRecordsStreamSvrLess,
+  createIndexDocRecordsStreamWithoutProgess,
+  createIndexDocRecordsStream,
+  createGenerateDocRecordsStream,
+} from './docs';
 
 export {
   createCreateIndexStream,
