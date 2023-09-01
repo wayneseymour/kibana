@@ -12,44 +12,39 @@ import { resolve } from 'path';
 import { prioritizeMappings } from '../lib';
 
 type PredicateFunction = (a: string) => boolean;
+type PathLikeOrString = fs.PathLike | string;
+
 const doesNotStartWithADot: PredicateFunction = (x) => !x.startsWith('.');
 const readDirectory = (predicate: PredicateFunction) => {
   return async (path: string) => (await readdir(path)).filter(predicate);
 };
 
-// const mappingsAndArchiveFileNamesMaybeZipped = readDirectory(doesNotStartWithADot);
-// from(
-//   pipe(await mappingsAndArchiveFileNamesMaybeZipped(archivePath as string), prioritizeMappings)
-// )
-
-type PathLikeOrString = fs.PathLike | string;
-
 const toStr = (x: BufferSource) => `${x}`;
 const decompressionObservable = (x: PathLikeOrString) =>
   from(fs.createReadStream(x).pipe(zlib.createGunzip())).pipe(map(toStr));
 
-const subscribeToDecompressionStream = (archivePath: PathLikeOrString) => {
-  decompressionObservable(archivePath).subscribe({
-    next: (x) => console.log('\nλjs decompression stream - next, x:', x),
-    error: (err) => console.log('error:', err),
-    complete: () => console.log('the end'),
-  });
-};
+// const subscribeToDecompressionStream = (archivePath: PathLikeOrString) => {
+//   decompressionObservable(archivePath).subscribe({
+//     next: (x) => console.log('\nλjs decompression stream - next, x:', x),
+//     error: (err) => console.log('error:', err),
+//     complete: () => console.log('the end'),
+//   });
+// };
 
 const jsonStanza$ = (x) => (_) => oboe(fs.createReadStream(x)).on('done', _);
 const jsonStanzaObservable = (x) => fromEventPattern(jsonStanza$(x));
 
-const subscribeToStreamingJsonStream = (archivePath) => {
-  archivePath =
-    '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt';
-  console.log(`\nλjs archivePath: \n\t${archivePath}`);
-
-  jsonStanzaObservable(archivePath).subscribe({
-    next: (x) => console.log(`\nλjs jsonStanzas stream - next, x: \n${JSON.stringify(x, null, 2)}`),
-    error: (err) => console.log('error:', err),
-    complete: () => console.log('the end'),
-  });
-};
+// const subscribeToStreamingJsonStream = (archivePath) => {
+//   archivePath =
+//     '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt';
+//   console.log(`\nλjs archivePath: \n\t${archivePath}`);
+//
+//   jsonStanzaObservable(archivePath).subscribe({
+//     next: (x) => console.log(`\nλjs jsonStanzas stream - next, x: \n${JSON.stringify(x, null, 2)}`),
+//     error: (err) => console.log('error:', err),
+//     complete: () => console.log('the end'),
+//   });
+// };
 
 type ArchivePathEntry = string;
 
@@ -58,22 +53,27 @@ const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
 
 const mappingsAndArchiveFileNames = async (x: PathLikeOrString) =>
   await readDirectory(doesNotStartWithADot)(x);
+
+const resolveAndPrioritizeArchiveEntriesObservable =
+  (archivePath: PathLikeOrString) => (xs: ArchivePathEntry[]) =>
+    from(pipe(prioritizeMappings)(xs)).pipe(map(resolveEntry(archivePath)));
+
 export const begin = async (archivePath: PathLikeOrString): Promise<void> => {
   // const archiveFilePath =
   //   '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt.gz';
   // subscribeToDecompressionStream(archivePath);
   // subscribeToStreamingJsonStream(archivePath);
 
-  archivePath =
-    '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/archive-path';
+  // archivePath =
+  //   '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/archive-path';
 
-  from(pipe(await mappingsAndArchiveFileNames(archivePath), prioritizeMappings))
-    .pipe(map(resolveEntry(archivePath)))
-    .subscribe({
-      next: (x) => console.log('\nλjs next, x:', x),
-      error: (err) => console.log('error:', err),
-      complete: () => console.log('the end'),
-    });
+  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
+    await mappingsAndArchiveFileNames(archivePath)
+  ).subscribe({
+    next: (x) => console.log('\nλjs next, x:', x),
+    error: (err) => console.log('error:', err),
+    complete: () => console.log('the end'),
+  });
 
   // concat(decompressionObservable(archiveFilePath), jsonStanzaObservable(archivePath)).subscribe({
 
