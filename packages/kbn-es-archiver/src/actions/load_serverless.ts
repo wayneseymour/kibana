@@ -32,9 +32,6 @@ const readDirectory = (predicate: PredicateFunction) => {
 //   });
 // };
 
-const jsonStanza$ = (x) => (_) => oboe(fs.createReadStream(x)).on('done', _);
-const jsonStanzaObservable = (x) => fromEventPattern(jsonStanza$(x));
-
 // const subscribeToStreamingJsonStream = (archivePath) => {
 //   archivePath =
 //     '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt';
@@ -75,12 +72,12 @@ type ArchivePathEntry = string;
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
 
-const mappingsAndArchiveFileNames = async (x: PathLikeOrString) =>
-  await readDirectory(doesNotStartWithADot)(x);
+const mappingsAndArchiveFileNames = async (pathToDirectory: PathLikeOrString) =>
+  await readDirectory(doesNotStartWithADot)(pathToDirectory);
 
 const resolveAndPrioritizeArchiveEntriesObservable =
-  (archivePath: PathLikeOrString) => (xs: ArchivePathEntry[]) =>
-    from(pipe(prioritizeMappings)(xs)).pipe(map(resolveEntry(archivePath)));
+  (pathToDirectory: PathLikeOrString) => (xs: ArchivePathEntry[]) =>
+    from(pipe(prioritizeMappings)(xs)).pipe(map(resolveEntry(pathToDirectory)));
 
 // const archiveEntries = async (archivePath: PathLikeOrString) => await pipe(
 //   TE.tryCatch(
@@ -100,34 +97,64 @@ const decompressionObservable = (x: PathLikeOrString) =>
 
 
 export const begin = async (archivePath: PathLikeOrString): Promise<void> => {
-  // const archiveFilePath =
-  //   '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt.gz';
-  // subscribeToDecompressionStream(archivePath);
-  // subscribeToStreamingJsonStream(archivePath);
+  // archiveFilePath = '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt.gz';
 
-  // archivePath =
-  //   '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/archive-path';
+  archivePath =
+    '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/archive';
 
-  // const xs = await archiveEntries(archivePath);
+  console.log(`\nλjs archivePath: \n\t${archivePath}`);
+  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(await mappingsAndArchiveFileNames(archivePath))
+    .subscribe({
+      next: (pathToFile) => {
+
+        console.log(`\nλjs pathToFile: \n\t${pathToFile}`);
+        decompressionObservable(pathToFile)
+          .subscribe({
+            next: (decompressedRecords) => {
+              console.log('\nλjs next, decompressedRecords:', decompressedRecords)
+
+
+              // const jsonStanzaFileStream = (x) => (_) =>x4
+              //   oboe(fs.createReadStream(x)).on("done", _);
+              // const jsonStanzaObservable = (jsonStanza$) => (x) => () =>
+              //   fromEventPattern(jsonStanza$(x));
+
+
+              // fromEventPattern((_) => oboe(x).on("done", _))
+              //   .subscribe({
+              //     next: (x) => console.log('\nλjs next, x:', x),
+              //     error: (err) => console.log('error:', err),
+              //     complete: () => console.log('the end'),
+              //   })
+            },
+            error: (err) => console.log('error:', err),
+            complete: () => console.log('the end'),
+          })
+      },
+      error: (err) => console.log('error:', err),
+      complete: () => console.log('the end'),
+    });
 
 
   // concat(
   //   resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
   //     await mappingsAndArchiveFileNames(archivePath)
   //   ),
-  //   // decompressionObservable(archivePath),
-  //   jsonStanzaObservable(archivePath)
+  //   decompressionObservable(archivePath),
+  // jsonStanzaObservable(archivePath)
   // ).subscribe({
   //   next: (x) => console.log('\nλjs next, x:', x),
   //   error: (err) => console.log('error:', err),
   //   complete: () => console.log('the end'),
   // });
-  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
-    await mappingsAndArchiveFileNames(archivePath)
-  ).subscribe({
-    next: (x) => console.log('\nλjs next, x:', x),
-    error: (err) => console.log('error:', err),
-    complete: () => console.log('the end'),
-  });
+
+
+  // resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
+  //   await mappingsAndArchiveFileNames(archivePath)
+  // ).subscribe({
+  //   next: (x) => console.log('\nλjs next, x:', x),
+  //   error: (err) => console.log('error:', err),
+  //   complete: () => console.log('the end'),
+  // });
 
 };
