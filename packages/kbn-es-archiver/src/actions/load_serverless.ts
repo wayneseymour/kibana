@@ -110,14 +110,6 @@ export const begin = async (archivePath: PathLikeOrString): Promise<void> => {
 
   // const xs = await archiveEntries(archivePath);
 
-  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
-    await mappingsAndArchiveFileNames(archivePath)
-  ).subscribe({
-    next: (x) => console.log('\nλjs next, x:', x),
-    error: (err) => console.log('error:', err),
-    complete: () => console.log('the end'),
-  });
-
 
   // concat(
   //   resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
@@ -130,17 +122,12 @@ export const begin = async (archivePath: PathLikeOrString): Promise<void> => {
   //   error: (err) => console.log('error:', err),
   //   complete: () => console.log('the end'),
   // });
+  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
+    await mappingsAndArchiveFileNames(archivePath)
+  ).subscribe({
+    next: (x) => console.log('\nλjs next, x:', x),
+    error: (err) => console.log('error:', err),
+    complete: () => console.log('the end'),
+  });
 
-
-  // concat(
-  //   resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
-  //     await mappingsAndArchiveFileNames(archivePath)
-  //   ),
-  //   // decompressionObservable(archivePath),
-  //   // jsonStanzaObservable(archivePath)
-  // ).subscribe({
-  //   next: (x) => console.log('\nλjs next, x:', x),
-  //   error: (err) => console.log('error:', err),
-  //   complete: () => console.log('the end'),
-  // });
 };
