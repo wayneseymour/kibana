@@ -92,69 +92,39 @@ const resolveAndPrioritizeArchiveEntriesObservable =
 // )();
 
 const toStr = (x: BufferSource) => `${x}`;
-const decompressionObservable = (x: PathLikeOrString) =>
-  from(fs.createReadStream(x).pipe(zlib.createGunzip())).pipe(map(toStr));
-
-
-export const begin = async (archivePath: PathLikeOrString): Promise<void> => {
-  // archiveFilePath = '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/someotherfile.txt.gz';
-
-  archivePath =
-    '/Users/trezworkbox/dev/scratches/src/js/streams/native-nodejs-streams/gunzip/archive';
-
-  console.log(`\nλjs archivePath: \n\t${archivePath}`);
-  resolveAndPrioritizeArchiveEntriesObservable(archivePath)(await mappingsAndArchiveFileNames(archivePath))
-    .subscribe({
-      next: (pathToFile) => {
-
-        console.log(`\nλjs pathToFile: \n\t${pathToFile}`);
-        decompressionObservable(pathToFile)
-          .subscribe({
-            next: (decompressedRecords) => {
-              console.log('\nλjs next, decompressedRecords:', decompressedRecords)
-
-
-              // const jsonStanzaFileStream = (x) => (_) =>x4
-              //   oboe(fs.createReadStream(x)).on("done", _);
-              // const jsonStanzaObservable = (jsonStanza$) => (x) => () =>
-              //   fromEventPattern(jsonStanza$(x));
-
-
-              // fromEventPattern((_) => oboe(x).on("done", _))
-              //   .subscribe({
-              //     next: (x) => console.log('\nλjs next, x:', x),
-              //     error: (err) => console.log('error:', err),
-              //     complete: () => console.log('the end'),
-              //   })
-            },
-            error: (err) => console.log('error:', err),
-            complete: () => console.log('the end'),
-          })
-      },
-      error: (err) => console.log('error:', err),
-      complete: () => console.log('the end'),
-    });
-
-
-  // concat(
-  //   resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
-  //     await mappingsAndArchiveFileNames(archivePath)
-  //   ),
-  //   decompressionObservable(archivePath),
-  // jsonStanzaObservable(archivePath)
-  // ).subscribe({
-  //   next: (x) => console.log('\nλjs next, x:', x),
-  //   error: (err) => console.log('error:', err),
-  //   complete: () => console.log('the end'),
-  // });
-
-
-  // resolveAndPrioritizeArchiveEntriesObservable(archivePath)(
-  //   await mappingsAndArchiveFileNames(archivePath)
-  // ).subscribe({
-  //   next: (x) => console.log('\nλjs next, x:', x),
-  //   error: (err) => console.log('error:', err),
-  //   complete: () => console.log('the end'),
-  // });
-
+const noop = () => {
 };
+
+export const begin = async (pathToCompressedFile: PathLikeOrString) => {
+  // pathToCompressedFile =
+  //   "/Users/trezworkbox/dev/main.worktrees/can-we-oboe/x-pack/test/functional/es_archives/ml/farequote/data.json.gz";
+    // "/Users/trezworkbox/dev/main.worktrees/can-we-oboe/myfarequote.txt"
+    // "/Users/trezworkbox/dev/main.worktrees/straight-pipe-using-sax-parser/x-pack/test/functional/es_archives/logstash_functional/data.json.gz";
+
+
+  console.log(`\nλjs pathToCompressedFile: \n\t${pathToCompressedFile}`);
+
+
+
+  const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
+    resolve(archivePath as string, x);
+
+  const mappingsAndArchiveFileNames = async (x: PathLikeOrString) =>
+    await readDirectory(doesNotStartWithADot)(x);
+
+  const resolveAndPrioritizeArchiveEntriesObservable =
+    (archivePath: PathLikeOrString) => (xs: ArchivePathEntry[]) =>
+      from(pipe(prioritizeMappings)(xs)).pipe(map(resolveEntry(archivePath)));
+
+
+
+
+  const obj$ = (x) => oboe(fs.createReadStream(x).pipe(zlib.createGunzip()));
+  const json$ = (x) =>
+    obj$(x).on("done", (obj) => {
+      console.log(`\nλjs obj: \n${JSON.stringify(obj, null, 2)}`);
+    });
+  json$(pathToCompressedFile);
+  // fromEventPattern???
+};
+
