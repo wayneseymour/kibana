@@ -15,7 +15,7 @@ const readAndUnzip$ = (x) => oboe(fs.createReadStream(x).pipe(zlib.createGunzip(
 const jsonStanza$ = (x) =>
   readAndUnzip$(x).on('done', (obj) => {
     console.log(`\nλjs obj: \n${JSON.stringify(obj, null, 2)}`);
-    process.exit(666); // Trez Exit Expression
+    // process.exit(666); // Trez Exit Expression
   });
 export const begin = async (pathToArchiveDirectory: PathLikeOrString) => {
   // pathToArchiveDirectory =

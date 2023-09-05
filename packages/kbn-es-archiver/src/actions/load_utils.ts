@@ -112,16 +112,5 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
       async () => await mappingsAndArchiveFileNames(archivePath),
       (reason: any) => toError(reason)
     ),
-    // TE.map((x) => {
-    //   // console.log(`\nλjs task either x: \n\t${x}`);
-    //   // console.log(`\nλjs archivePath: \n\t${archivePath}`);
-    //   const resolved = resolveEntry(archivePath)(x)
-    //   console.log(`\nλjs resolved: \n\t${resolved}`);
-    //   return x;
-    // }),
-    // TE.map((x) => {
-    //   console.log(`\nλjs task either x: \n\t${x}`);
-    //   return x;
-    // }),
     TE.getOrElse((e) => handleErrToFile(archivePath)(e))
   )();
