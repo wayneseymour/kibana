@@ -8,9 +8,14 @@
 
 import type { Client } from '@elastic/elasticsearch';
 
-import { PassThrough, Readable } from 'stream';
-import { concatStreamProviders } from '@kbn/utils';
-import { prioritizeMappings, readDirectory } from '../lib';
+import { Readable } from 'stream';
+import { pipe } from 'fp-ts/function';
+import * as TE from 'fp-ts/TaskEither';
+import { toError } from 'fp-ts/Either';
+import fs, { writeFileSync } from 'fs';
+import { resolve } from 'path';
+import { REPO_ROOT } from '@kbn/repo-info';
+import { readdir } from 'fs/promises';
 import { ES_CLIENT_HEADERS } from '../client_headers';
 
 type Arrow2Readable = () => Readable;
@@ -18,14 +23,14 @@ interface FX {
   (filename: string): Arrow2Readable;
   (value: string, index: number, array: string[]): Arrow2Readable;
 }
-export async function recordStream(streamFactoryFn: FX, inputDir: string): Promise<PassThrough> {
-  return concatStreamProviders(
-    prioritizeMappings(await readDirectory(inputDir)).map(streamFactoryFn),
-    {
-      objectMode: true,
-    }
-  );
-}
+// export async function recordStream(streamFactoryFn: FX, inputDir: string): Promise<PassThrough> {
+//   return concatStreamProviders(
+//     prioritizeMappings(await readDirectory(inputDir)).map(streamFactoryFn),
+//     {
+//       objectMode: true,
+//     }
+//   );
+// }
 
 export function docIndicesPushFactory(xs: string[]) {
   return function (idx: string) {
@@ -62,3 +67,61 @@ export const readablesToReadable = (...streams: Readable[]): Readable =>
   streams.reduce((source: Readable, dest: Readable) =>
     source.once('error', (error) => dest.destroy(error)).pipe(dest as any)
   );
+
+export type PredicateFunction = (a: string) => boolean;
+export type PathLikeOrString = fs.PathLike | string;
+export type ArchivePathEntry = string;
+
+const errFilePath = () => resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
+const handleErrToFile = (archivePath) => (reason) => {
+  const { code, stack, message } = reason;
+
+  const caught = {
+    code,
+    stack,
+    message,
+    archiveThatFailed: archivePath,
+  };
+  const failedMsg = `${JSON.stringify(caught, null, 2)}`;
+
+  try {
+    throw new Error(`${reason}`);
+  } catch (err) {
+    console.error(failedMsg);
+    writeFileSync(errFilePath(), `${failedMsg},\n`, { flag: 'a', encoding: 'utf8' });
+  }
+
+  return toError(reason);
+};
+const doesNotStartWithADot: PredicateFunction = (x) => !x.startsWith('.');
+const readDirectory = (predicate: PredicateFunction) => {
+  return async (path: string) => (await readdir(path)).filter(predicate);
+};
+
+const mappingsAndArchiveFileNames = async (pathToDirectory: PathLikeOrString) =>
+  await readDirectory(doesNotStartWithADot)(pathToDirectory);
+
+/*
+ Cases:
+ One file, zipped or not
+ Two files, either zipped or not
+ */
+export const archiveEntries = async (archivePath: PathLikeOrString) =>
+  await pipe(
+    TE.tryCatch(
+      async () => await mappingsAndArchiveFileNames(archivePath),
+      (reason: any) => toError(reason)
+    ),
+    // TE.map((x) => {
+    //   // console.log(`\nλjs task either x: \n\t${x}`);
+    //   // console.log(`\nλjs archivePath: \n\t${archivePath}`);
+    //   const resolved = resolveEntry(archivePath)(x)
+    //   console.log(`\nλjs resolved: \n\t${resolved}`);
+    //   return x;
+    // }),
+    // TE.map((x) => {
+    //   console.log(`\nλjs task either x: \n\t${x}`);
+    //   return x;
+    // }),
+    TE.getOrElse((e) => handleErrToFile(archivePath)(e))
+  )();
