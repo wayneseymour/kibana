@@ -12,6 +12,7 @@ import { fromEventPattern } from 'rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import { PathLikeOrString, archiveEntries, ArchivePathEntry } from './load_utils';
 import { isGzip } from '../lib';
+// import type { Subscription} from 'rxjs';
 
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
@@ -44,9 +45,6 @@ const readAndUnzip$ = (needsDecompression: boolean) => (x: PathLikeOrString) =>
     )
   );
 
-// const jsonStanza$ = (pathToFile: PathLikeOrString) => (_: any) =>
-//   readAndUnzip$(pathToFile).on('done', _);
-
 const jsonStanzaExtended$ =
   (pathToFile: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
     readAndUnzip$(needsDecompression)(pathToFile).on('done', _);
@@ -62,14 +60,6 @@ const subscribe = (subscriptionF) => (obj: Annotated) => {
 };
 export const begin = async (pathToArchiveDirectory: PathLikeOrString) => {
   (await archiveEntries(pathToArchiveDirectory))
-    .map(prepareForStanzation(pathToArchiveDirectory))
+    .map(prepareForStanzation(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
     .map(pipe(subscription, subscribe));
-  // .map((x) => pipe(prepareForStanzation(pathToArchiveDirectory)(x), subscription, subscribe));
 };
-
-// const {x, needsDecompression: flag} = resolvedArchiveDirectoryEntry;
-// pipe(jsonStanza$(x), fromEventPattern).subscribe({
-//   next: (x) => console.log(`\nλjs streamed - x: \n${JSON.stringify(x, null, 2)}`),
-//   error: (err) => console.log('error:', err),
-//   complete: () => console.log('the end'),
-// })
