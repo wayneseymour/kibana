@@ -317,7 +317,8 @@ export function testsLoop(
 }
 export const LOOP_LIMIT: number = (process.env.LOOP_LIMIT as unknown as number) ?? 50;
 export const archives = [
+  // 'test/functional/fixtures/es_archiver/date_nested',
   'x-pack/test/functional/es_archives/logstash_functional',
-  // 'test/functional/fixtures/es_archiver/many_fields',
-  // 'x-pack/test/functional/es_archives/ml/farequote',
+  'test/functional/fixtures/es_archiver/many_fields',
+  'x-pack/test/functional/es_archives/ml/farequote',
 ] as const;
