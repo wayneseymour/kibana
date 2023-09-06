@@ -22,7 +22,7 @@ import {
 
   // createIndexDocRecordsStream,
 } from '../lib';
-import { begin } from './load_serverless';
+import { straightPipe } from './load_serverless';
 
 // pipe a series of streams into each other so that data and errors
 // flow from the first stream to the last. Errors from the last stream
@@ -51,7 +51,7 @@ export async function loadAction({
 }) {
   const name = relative(REPO_ROOT, inputDir);
   const stats = createStats(name, log);
-  await begin(name);
+  await straightPipe(name);
   // process.exit(666); // Trez Exit Expression
   // await createPromiseFromStreams([
   //   // This used to be  const recordStream = concatStreamProviders()...
