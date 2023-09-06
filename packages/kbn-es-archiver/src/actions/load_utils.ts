@@ -18,13 +18,12 @@ import fs, { writeFileSync } from 'fs';
 import { REPO_ROOT } from '@kbn/repo-info';
 import { readdir } from 'fs/promises';
 import * as zlib from 'zlib';
-import oboe from 'oboe';
+import oboe, { Oboe } from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
 import { resolve } from 'path';
-import { fromEventPattern } from 'rxjs';
+import { fromEventPattern, Observable } from 'rxjs';
 import { ES_CLIENT_HEADERS } from '../client_headers';
 import { isGzip } from '../lib';
-// import type { Subscription} from 'rxjs';
 
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
@@ -45,7 +44,7 @@ export const prepareForStanzation: (a: PathLikeOrString) => (b: string) => Annot
   (pathToArchiveDirectory) => (entry) =>
     pipe(entry, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
 
-const readAndUnzip$ = (needsDecompression: boolean) => (x: PathLikeOrString) =>
+const readAndUnzip$: (a: boolean) => (b: PathLikeOrString) => Oboe = (needsDecompression) => (x) =>
   oboe(
     pipeline(
       fs.createReadStream(x),
@@ -64,7 +63,10 @@ const jsonStanzaExtended$ =
   (pathToFile: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
     readAndUnzip$(needsDecompression)(pathToFile).on('done', _);
 
-export const subscription = ({ absolutePathOfEntry, needsDecompression }: Annotated) =>
+export const subscription: (a: Annotated) => Observable<any> = ({
+  absolutePathOfEntry,
+  needsDecompression,
+}: Annotated) =>
   pipe(jsonStanzaExtended$(absolutePathOfEntry)(needsDecompression), fromEventPattern);
 // TODO-TRE: Fix type info
 export const subscribe = (subscriptionF) => (obj: Annotated) => {
@@ -114,16 +116,8 @@ export type PathLikeOrString = fs.PathLike | string;
 export type ArchivePathEntry = string;
 
 const errFilePath = () => resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
-const handleErrToFile = (archivePath) => (reason) => {
-  const { code, stack, message } = reason;
-
-  const caught = {
-    code,
-    stack,
-    message,
-    archiveThatFailed: archivePath,
-  };
-  const failedMsg = `${JSON.stringify(caught, null, 2)}`;
+const handleErrToFile = (archivePath: string) => (reason: Error) => {
+  const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
 
   try {
     throw new Error(`${reason}`);
@@ -140,8 +134,9 @@ const readDirectory = (predicate: PredicateFunction) => {
 };
 
 const mappingsAndArchiveFileNames = async (pathToDirectory: PathLikeOrString) =>
-  await readDirectory(doesNotStartWithADot)(pathToDirectory);
+  await readDirectory(doesNotStartWithADot)(pathToDirectory as string);
 
+// TODO-TRE: Handle all the cases below?
 /*
  Cases:
  One file, zipped or not
@@ -153,5 +148,5 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
       async () => await mappingsAndArchiveFileNames(archivePath),
       (reason: any) => toError(reason)
     ),
-    TE.getOrElse((e) => handleErrToFile(archivePath)(e))
+    TE.getOrElse(handleErrToFile(archivePath))
   )();
