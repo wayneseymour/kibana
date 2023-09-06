@@ -6,6 +6,8 @@ import * as fs from 'fs';
 import oboe from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
 import { resolve } from 'path';
+import { fromEventPattern } from 'rxjs';
+import { pipe } from 'fp-ts/lib/function';
 import { PathLikeOrString, archiveEntries, ArchivePathEntry } from './load_utils';
 
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
@@ -21,15 +23,16 @@ const readAndUnzip$ = (x) =>
       }
     })
   );
-const jsonStanza$ = (x) =>
-  readAndUnzip$(x).on('done', function theUglyCallback(jsonRecord) {
-    console.log(`\nλjs jsonRecord: \n${JSON.stringify(jsonRecord, null, 2)}`);
-    // process.exit(666); // Trez Exit Expression
-  });
+const jsonStanza$ = (pathToFile: PathLikeOrString) => (_: any) =>
+  readAndUnzip$(pathToFile).on('done', _);
 export const begin = async (pathToArchiveDirectory: PathLikeOrString) => {
-  (await archiveEntries(pathToArchiveDirectory)) // an array of one or two strings
-    .map(resolveEntry(pathToArchiveDirectory)) // map the agove array into relative paths
-    .map((entry) => {
-      jsonStanza$(entry); // stream the contents (unzipped), via a callback
-    });
+  (await archiveEntries(pathToArchiveDirectory))
+    .map(resolveEntry(pathToArchiveDirectory))
+    .map((resolvedArchiveDirectoryEntry) =>
+      pipe(jsonStanza$(resolvedArchiveDirectoryEntry), fromEventPattern).subscribe({
+        next: (x) => console.log(`\nλjs streamed - x: \n${JSON.stringify(x, null, 2)}`),
+        error: (err) => console.log('error:', err),
+        complete: () => console.log('the end'),
+      })
+    );
 };
