@@ -13,20 +13,14 @@ const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
 const readAndUnzip$ = (x) => oboe(fs.createReadStream(x).pipe(zlib.createGunzip()));
 const jsonStanza$ = (x) =>
-  readAndUnzip$(x).on('done', (obj) => {
+  readAndUnzip$(x).on('done', function theUglyCallback(obj) {
     console.log(`\nλjs obj: \n${JSON.stringify(obj, null, 2)}`);
     // process.exit(666); // Trez Exit Expression
   });
 export const begin = async (pathToArchiveDirectory: PathLikeOrString) => {
-  // pathToArchiveDirectory =
-  //   "/Users/trezworkbox/dev/main.worktrees/can-we-oboe/x-pack/test/functional/es_archives/ml/farequote/data.json.gz";
-  // "/Users/trezworkbox/dev/main.worktrees/can-we-oboe/myfarequote.txt"
-  // "/Users/trezworkbox/dev/main.worktrees/straight-pipe-using-sax-parser/x-pack/test/functional/es_archives/logstash_functional/data.json.gz";
-  // console.log(`\nλjs pathToArchiveDirectory: \n\t${pathToArchiveDirectory}`);
-
-  (await archiveEntries(pathToArchiveDirectory))
-    .map(resolveEntry(pathToArchiveDirectory))
+  (await archiveEntries(pathToArchiveDirectory)) // an array of one or two strings
+    .map(resolveEntry(pathToArchiveDirectory)) // map the agove array into relative paths
     .map((entry) => {
-      jsonStanza$(entry);
+      jsonStanza$(entry); // stream the contents (unzipped), via a callback
     });
 };
