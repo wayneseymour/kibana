@@ -14,7 +14,7 @@ import { Readable } from 'stream';
 import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import { toError } from 'fp-ts/Either';
-import fs, { writeFileSync } from 'fs';
+import fs, { createReadStream, writeFileSync } from 'fs';
 import { REPO_ROOT } from '@kbn/repo-info';
 import { readdir } from 'fs/promises';
 import * as zlib from 'zlib';
@@ -22,15 +22,18 @@ import oboe, { Oboe } from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
 import { resolve } from 'path';
 import { fromEventPattern, Observable } from 'rxjs';
+import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
-import { isGzip } from '../lib';
+import { createParseArchiveStreams, isGzip } from '../lib';
 
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
+
 interface Annotated {
   absolutePathOfEntry: string;
   needsDecompression: boolean;
 }
+
 type PredicateFn = (a: string) => boolean;
 const annotateForDecompression =
   (predicate: PredicateFn) =>
@@ -63,7 +66,7 @@ const jsonStanzaExtended$ =
   (pathToFile: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
     readAndUnzip$(needsDecompression)(pathToFile).on('done', _);
 
-export const subscription: (a: Annotated) => Observable<any> = ({
+export const jsonStanza$Subscription: (a: Annotated) => Observable<any> = ({
   absolutePathOfEntry,
   needsDecompression,
 }: Annotated) =>
@@ -71,14 +74,16 @@ export const subscription: (a: Annotated) => Observable<any> = ({
 // TODO-TRE: Fix type info
 export const subscribe = (subscriptionF) => (obj: Annotated) => {
   subscriptionF(obj).subscribe({
-    next: (x: string) => console.log(`\nλjs streamed - x: \n${JSON.stringify(x, null, 2)}`),
+    next: (x: string) => console.log(`\nλjs streamed - xf: \n${JSON.stringify(x, null, 2)}`),
     error: (err: Error) => console.log('error:', err),
     complete: () => console.log('the end'),
   });
 };
 type Arrow2Readable = () => Readable;
+
 interface FX {
   (filename: string): Arrow2Readable;
+
   (value: string, index: number, array: string[]): Arrow2Readable;
 }
 
@@ -87,15 +92,18 @@ export function docIndicesPushFactory(xs: string[]) {
     xs.push(idx);
   };
 }
+
 export function atLeastOne(predicate: {
   (x: string): boolean;
   (value: string, index: number, array: string[]): unknown;
 }) {
   return (result: {}) => Object.keys(result).some(predicate);
 }
+
 export function indexingOccurred(docs: { indexed: any; archived?: number }) {
   return docs && docs.indexed > 0;
 }
+
 export async function freshenUp(client: Client, indicesWithDocs: string[]): Promise<void> {
   await client.indices.refresh(
     {
@@ -107,6 +115,7 @@ export async function freshenUp(client: Client, indicesWithDocs: string[]): Prom
     }
   );
 }
+
 export function hasDotKibanaPrefix(mainSOIndex: string) {
   return (x: string) => x.startsWith(mainSOIndex);
 }
@@ -150,3 +159,27 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     ),
     TE.getOrElse(handleErrToFile(archivePath))
   )();
+
+// a single stream that emits records from all archive files, in
+// order, so that createIndexStream can track the state of indexes
+// across archives and properly skip docs from existing indexes
+export const readDir$AndCreateStanzasViaHandJamming$ =
+  (archiveDirectory: string) => (maybeMappingsAndDocsFileNamesFromArchive: string[]) =>
+    concatStreamProviders(
+      maybeMappingsAndDocsFileNamesFromArchive.map((filename: string) => () => {
+        return foldStreams(
+          createReadStream(resolve(archiveDirectory, filename)),
+          ...createParseArchiveStreams({ gzip: isGzip(filename) })
+        );
+      }),
+      { objectMode: true }
+    );
+// TODO-TRE: I think the above fn is now a duplicate of an TaskEither
+
+// pipe a series of streams into each other so that data and errors
+// flow from the first stream to the last. Errors from the last stream
+// are not listened for
+const foldStreams = (...streams: Readable[]) =>
+  streams.reduce((source, dest) =>
+    source.once('error', (error) => dest.destroy(error)).pipe(dest as any)
+  );
