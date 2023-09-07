@@ -11,26 +11,11 @@ import { ToolingLog } from '@kbn/tooling-log';
 import { REPO_ROOT } from '@kbn/repo-info';
 import type { KbnClient } from '@kbn/test';
 import type { Client } from '@elastic/elasticsearch';
-import { createPromiseFromStreams } from '@kbn/utils';
 
 import { MAIN_SAVED_OBJECT_INDEX } from '@kbn/core-saved-objects-server';
-import { pipe } from 'fp-ts/lib/function';
-import {
-  atLeastOne,
-  readDir$AndCreateStanzasViaHandJamming$,
-  freshenUp,
-  hasDotKibanaPrefix,
-  indexingOccurred,
-} from './load_utils';
-import {
-  createStats,
-  prioritizeMappings,
-  readDirectory as mappingAndDataFile,
-  createCreateIndexStream as oldCreateIndexOrDataStream$,
-  migrateSavedObjectIndices,
-  createDefaultSpace,
-  createIndexDocRecordsStreamSvrLess,
-} from '../lib';
+import { atLeastOne, freshenUp, hasDotKibanaPrefix, indexingOccurred } from './load_utils';
+import { createStats, migrateSavedObjectIndices, createDefaultSpace } from '../lib';
+import { straightPipeWithIndexCreation } from './straight_pipe';
 
 export async function loadAction({
   inputDir,
@@ -53,16 +38,22 @@ export async function loadAction({
   const relativeArchivePath = relFromRoot(inputDir);
 
   const stats = createStats(relativeArchivePath, log);
-  await createPromiseFromStreams([
-    pipe(
-      await mappingAndDataFile(inputDir),
-      prioritizeMappings,
-      readDir$AndCreateStanzasViaHandJamming$(inputDir)
-    ),
-    oldCreateIndexOrDataStream$({ client, stats, skipExisting, docsOnly, log }),
-    createIndexDocRecordsStreamSvrLess(client, stats, useCreate),
-  ]);
-  // await straightPipe(relativeArchivePath);
+  // await createPromiseFromStreams([
+  //   pipe(
+  //     await mappingAndDataFile(inputDir),
+  //     prioritizeMappings,
+  //     readDir$AndCreateStanzasViaHandJamming$(inputDir)
+  //   ),
+  //   oldCreateIndexOrDataStream$({ client, stats, skipExisting, docsOnly, log }),
+  //   createIndexDocRecordsStreamSvrLess(client, stats, useCreate),
+  // ]);
+  await straightPipeWithIndexCreation(relativeArchivePath)({
+    client,
+    stats,
+    skipExisting,
+    docsOnly,
+    log,
+  });
   /*
    The two expressions above could be a promise.all or TaskEither.sequence!
    */
