@@ -50,6 +50,9 @@ export default function suiteFactory({ getService }: FtrProviderContext): void {
   const logDirAbsolutePath: PathLike = absolutePathForLogsDirectory(LOGS_DIR);
   const push = metricsFactory(results);
   describe(`Loop for Measuring Es Archiver Perf on Serverless ONLY`, async function serverlessBigLoopSuite() {
+    before(async function unloadBenchmarkingArchives() {
+      for (const a of archives) await esArchiver.unload(a);
+    });
     before(
       async (): Promise<void> =>
         await printInfoAndInitOutputLogging(
