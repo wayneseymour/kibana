@@ -42,35 +42,37 @@ const annotateForDecompression =
     entryAbsPath,
   });
 
+export type Pathlike2ResolvedPathLike2Annotated = (a: PathLikeOrString) => (b: string) => Annotated;
 // TODO-TRE: Remove ambiguity in variable name
-export const resolveAndAnnotateForDecompression: (
-  a: PathLikeOrString
-) => (b: string) => Annotated = (pathToArchiveDirectory) => (entry) =>
-  pipe(entry, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
+export const resolveAndAnnotateForDecompression: Pathlike2ResolvedPathLike2Annotated =
+  (pathToArchiveDirectory) => (entryAbsPath) =>
+    pipe(entryAbsPath, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
 
-const readAndUnzip$: (a: boolean) => (b: PathLikeOrString) => Oboe = (needsDecompression) => (x) =>
-  oboe(
-    pipeline(
-      fs.createReadStream(x),
-      needsDecompression ? zlib.createGunzip() : new PassThrough(),
-      (err) => {
-        if (err) {
-          console.warn('\nλjs Pipeline failed.', err);
-        } else {
-          console.log('\nλjs Pipeline succeeded.');
+export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
+const readAndMaybeUnzipUsingSaxParser$: Boolean2PathLikeString2Stream =
+  (needsDecompression) => (x) =>
+    oboe(
+      pipeline(
+        fs.createReadStream(x),
+        needsDecompression ? zlib.createGunzip() : new PassThrough(),
+        (err) => {
+          if (err) {
+            console.warn('\nλjs Pipeline failed.', err);
+          } else {
+            console.log('\nλjs Pipeline succeeded.');
+          }
         }
-      }
-    )
-  );
+      )
+    );
 
-const jsonStanzaExtended$ =
-  (pathToFile: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
-    readAndUnzip$(needsDecompression)(pathToFile).on('done', _);
+const saxParserJsonStanza$ =
+  (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
+    readAndMaybeUnzipUsingSaxParser$(needsDecompression)(entryAbsPath).on('done', _);
 
 // export type Annotated_2_ObservableSubscription = (a: Annotated) => Observable<string>
 // export const jsonStanza$Subscription: Annotated_2_ObservableSubscription = ({
 export const jsonStanza$Subscription = ({ entryAbsPath, needsDecompression }: Annotated) =>
-  pipe(jsonStanzaExtended$(entryAbsPath)(needsDecompression), fromEventPattern);
+  pipe(saxParserJsonStanza$(entryAbsPath)(needsDecompression), fromEventPattern);
 
 // TODO-TRE: Fix type info
 export const subscribe = (subscriptionF) => (obj: Annotated) => {
