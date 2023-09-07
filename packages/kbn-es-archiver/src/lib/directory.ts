@@ -8,7 +8,7 @@
 
 import { readdir } from 'fs/promises';
 
-export async function readDirectory(path: string) {
+export async function readDirectory(path: string): Promise<string[]> {
   const allNames = await readdir(path);
   return allNames.filter((name) => !name.startsWith('.'));
 }
