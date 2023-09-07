@@ -5,21 +5,22 @@ import { pipe } from 'fp-ts/lib/function';
 import {
   PathLikeOrString,
   archiveEntries,
-  prepareForStanzation,
+  resolveAndAnnotateForDecompression,
   jsonStanza$Subscription,
   subscribe,
 } from './load_utils';
 
 export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Promise<void> => {
   (await archiveEntries(pathToArchiveDirectory))
-    .map(prepareForStanzation(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
+    .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
     .map(pipe(jsonStanza$Subscription, subscribe));
 };
 
-export const straightPipeWithIndexCreation = async (
-  pathToArchiveDirectory: PathLikeOrString
-): Promise<void> => {
-  (await archiveEntries(pathToArchiveDirectory))
-    .map(prepareForStanzation(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
-    .map(pipe(jsonStanza$Subscription, subscribe));
-};
+export const straightPipeWithIndexCreation =
+  (pathToArchiveDirectory: PathLikeOrString) =>
+  async ({ client, stats, skipExisting, docsOnly, log }) => {
+    (await archiveEntries(pathToArchiveDirectory))
+      .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
+      // createCreateIndexStream({ client, stats, skipExisting, docsOnly, log })
+      .map(pipe(jsonStanza$Subscription, subscribe));
+  };
