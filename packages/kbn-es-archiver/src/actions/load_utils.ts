@@ -21,7 +21,7 @@ import * as zlib from 'zlib';
 import oboe, { Oboe } from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
 import { resolve } from 'path';
-import { fromEventPattern, Observable } from 'rxjs';
+import { fromEventPattern } from 'rxjs';
 import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
 import { createParseArchiveStreams, isGzip } from '../lib';
@@ -30,22 +30,23 @@ const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
   resolve(archivePath as string, x);
 
 interface Annotated {
-  absolutePathOfEntry: string;
+  entryAbsPath: string;
   needsDecompression: boolean;
 }
 
 type PredicateFn = (a: string) => boolean;
 const annotateForDecompression =
   (predicate: PredicateFn) =>
-  (absolutePathOfEntry: any): Annotated => ({
-    needsDecompression: predicate(absolutePathOfEntry) ? true : false,
-    absolutePathOfEntry,
+  (entryAbsPath: any): Annotated => ({
+    needsDecompression: predicate(entryAbsPath) ? true : false,
+    entryAbsPath,
   });
 
 // TODO-TRE: Remove ambiguity in variable name
-export const prepareForStanzation: (a: PathLikeOrString) => (b: string) => Annotated =
-  (pathToArchiveDirectory) => (entry) =>
-    pipe(entry, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
+export const resolveAndAnnotateForDecompression: (
+  a: PathLikeOrString
+) => (b: string) => Annotated = (pathToArchiveDirectory) => (entry) =>
+  pipe(entry, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
 
 const readAndUnzip$: (a: boolean) => (b: PathLikeOrString) => Oboe = (needsDecompression) => (x) =>
   oboe(
@@ -66,11 +67,11 @@ const jsonStanzaExtended$ =
   (pathToFile: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
     readAndUnzip$(needsDecompression)(pathToFile).on('done', _);
 
-export const jsonStanza$Subscription: (a: Annotated) => Observable<any> = ({
-  absolutePathOfEntry,
-  needsDecompression,
-}: Annotated) =>
-  pipe(jsonStanzaExtended$(absolutePathOfEntry)(needsDecompression), fromEventPattern);
+// export type Annotated_2_ObservableSubscription = (a: Annotated) => Observable<string>
+// export const jsonStanza$Subscription: Annotated_2_ObservableSubscription = ({
+export const jsonStanza$Subscription = ({ entryAbsPath, needsDecompression }: Annotated) =>
+  pipe(jsonStanzaExtended$(entryAbsPath)(needsDecompression), fromEventPattern);
+
 // TODO-TRE: Fix type info
 export const subscribe = (subscriptionF) => (obj: Annotated) => {
   subscriptionF(obj).subscribe({
