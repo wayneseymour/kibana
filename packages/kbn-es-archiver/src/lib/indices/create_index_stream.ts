@@ -218,24 +218,31 @@ export function createCreateIndexStream({
       try {
         switch (record && record.type) {
           case 'index':
+            console.log('\nλjs creating index');
             await handleIndex(record);
             break;
 
           case 'data_stream':
+            console.log('\nλjs creating data stream');
+
             await handleDataStream(record);
             break;
 
           case 'doc':
+            console.log('\nλjs handling a doc?');
             await handleDoc(this, record);
             break;
 
           default:
+            console.log('\nλjs default case?');
             this.push(record);
             break;
         }
 
+        console.log('\nλjs calling callback()');
         callback();
       } catch (err) {
+        console.log('\nλjs calling callback() with error! :( ');
         callback(err);
       }
     },
