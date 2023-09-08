@@ -48,27 +48,20 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
 
-const pipelineAll =
-  (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (indexingArgs) => {
+export const pipelineAll =
+  (needsDecompression: boolean) =>
+  (entryAbsPath: PathLikeOrString) =>
+  (indexOrDataStreamCreationArgs) => {
     return oboe(
       pipeline(
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
-        originalMakeIndexOrDataStreamStream(indexingArgs),
+        originalMakeIndexOrDataStreamStream(indexOrDataStreamCreationArgs),
         // new PassThrough(),
         handlePipelinedStreams(entryAbsPath)
       )
     );
   };
-export const allWrapper$ =
-  (entryAbsPath: PathLikeOrString) =>
-  (needsDecompression: boolean) =>
-  (handler: () => any) =>
-  (indexingArgs) =>
-    // readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$(needsDecompression)(entryAbsPath)(
-    //   indexingArgs
-    // ).on('done', handler);
-    pipelineAll(needsDecompression)(entryAbsPath)(indexingArgs).on('done', handler);
 
 const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
 const fileOutRecordLimitNotReached = (counter: number): boolean => counter < FILE_OUT_RECORD_LIMIT;

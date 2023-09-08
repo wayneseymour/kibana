@@ -4,8 +4,9 @@
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
-import { allWrapper$, archiveEntries, handleStreamToFileWithLimit } from './straight_pipe_utils';
+import { pipelineAll, archiveEntries, handleStreamToFileWithLimit } from './straight_pipe_utils';
 
+// This just 'outs' the records to the terminal
 // export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Promise<void> => {
 //   (await archiveEntries(pathToArchiveDirectory))
 //     .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
@@ -14,13 +15,14 @@ import { allWrapper$, archiveEntries, handleStreamToFileWithLimit } from './stra
 
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
-  async (...indexingArgs) => {
+  async (...indexOrDataStreamCreationArgs) => {
     (await archiveEntries(pathToArchiveDirectory))
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
       .forEach((x: Annotated) => {
         const { entryAbsPath, needsDecompression } = x;
-        // console.log(`\nλjs entryAbsPath: \n\t${entryAbsPath}`);
-
-        allWrapper$(entryAbsPath)(needsDecompression)(handleStreamToFileWithLimit(0))(indexingArgs);
+        pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
+          'done',
+          handleStreamToFileWithLimit(0)
+        );
       });
   };
