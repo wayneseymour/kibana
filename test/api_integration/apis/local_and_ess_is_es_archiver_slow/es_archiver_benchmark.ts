@@ -25,6 +25,7 @@ import {
   testsLoop,
   LOOP_LIMIT,
   archives,
+  unloadBenchmarkingArchives,
 } from './utils';
 import { FtrProviderContext } from '../../../functional/ftr_provider_context';
 
@@ -52,9 +53,7 @@ export default function suiteFactory({ getService }: FtrProviderContext): void {
 
   const push = metricsFactory(results);
   describe(`Loop for Measuring Es Archiver Perf on Cloud (ESS) and Local, not Serverless`, function localAndEssBigLoopSuite(): void {
-    before(async function unloadBenchmarkingArchives() {
-      for (const a of archives) await esArchiver.unload(a);
-    });
+    before(async () => await unloadBenchmarkingArchives(esArchiver)(archives));
     before(
       async (): Promise<void> =>
         await printInfoAndInitOutputLogging(
@@ -68,5 +67,6 @@ export default function suiteFactory({ getService }: FtrProviderContext): void {
     archives.forEach(testsLoop(esArchiver, log, LOOP_LIMIT, isDryRun(), push, logDirAbsolutePath));
 
     after(async (): Promise<any> => await afterAll(RUNTIME_ENV, logDirAbsolutePath, results)(log));
+    after(async () => await unloadBenchmarkingArchives(esArchiver)(archives));
   });
 }

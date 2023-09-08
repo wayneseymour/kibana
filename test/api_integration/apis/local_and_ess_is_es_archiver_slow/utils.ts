@@ -315,7 +315,13 @@ export function testsLoop(
     });
   };
 }
+
 export const LOOP_LIMIT: number = (process.env.LOOP_LIMIT as unknown as number) ?? 50;
+
+export const unloadBenchmarkingArchives = (esArchiver: EsArchiver) => async (xs: string[]) => {
+  for (const x of xs) await esArchiver.unload(x);
+};
+
 export const archives = [
   // 'test/functional/fixtures/es_archiver/date_nested',
   'x-pack/test/functional/es_archives/logstash_functional',

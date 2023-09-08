@@ -18,6 +18,7 @@ import {
   printInfoAndInitOutputLogging,
   testsLoop,
   archives,
+  unloadBenchmarkingArchives,
   // eslint-disable-next-line @kbn/imports/no_boundary_crossing
 } from '../../../../../test/api_integration/apis/local_and_ess_is_es_archiver_slow/utils';
 import type {
@@ -50,9 +51,7 @@ export default function suiteFactory({ getService }: FtrProviderContext): void {
   const logDirAbsolutePath: PathLike = absolutePathForLogsDirectory(LOGS_DIR);
   const push = metricsFactory(results);
   describe(`Loop for Measuring Es Archiver Perf on Serverless ONLY`, async function serverlessBigLoopSuite() {
-    before(async function unloadBenchmarkingArchives() {
-      for (const a of archives) await esArchiver.unload(a);
-    });
+    before(async () => await unloadBenchmarkingArchives(esArchiver)(archives));
     before(
       async (): Promise<void> =>
         await printInfoAndInitOutputLogging(
@@ -75,5 +74,6 @@ export default function suiteFactory({ getService }: FtrProviderContext): void {
     );
 
     after(async (): Promise<any> => await afterAll('SERVERLESS', logDirAbsolutePath, results)(log));
+    after(async () => await unloadBenchmarkingArchives(esArchiver)(archives));
   });
 }
