@@ -26,15 +26,19 @@ import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
 import { createParseArchiveStreams, isGzip } from '../lib';
 
-const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
-  resolve(archivePath as string, x);
-
-interface Annotated {
+export interface Annotated {
   entryAbsPath: string;
   needsDecompression: boolean;
 }
+export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
+export type Pathlike2ResolvedPathLike2Annotated = (a: PathLikeOrString) => (b: string) => Annotated;
+export type PredicateFn = (a: string) => boolean;
+export type PathLikeOrString = fs.PathLike | string;
+export type ArchivePathEntry = string;
 
-type PredicateFn = (a: string) => boolean;
+const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
+  resolve(archivePath as string, x);
+
 const annotateForDecompression =
   (predicate: PredicateFn) =>
   (entryAbsPath: any): Annotated => ({
@@ -42,13 +46,11 @@ const annotateForDecompression =
     entryAbsPath,
   });
 
-export type Pathlike2ResolvedPathLike2Annotated = (a: PathLikeOrString) => (b: string) => Annotated;
 // TODO-TRE: Remove ambiguity in variable name
 export const resolveAndAnnotateForDecompression: Pathlike2ResolvedPathLike2Annotated =
   (pathToArchiveDirectory) => (entryAbsPath) =>
     pipe(entryAbsPath, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
 
-export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
 const readAndMaybeUnzipUsingSaxParser$: Boolean2PathLikeString2Stream =
   (needsDecompression) => (x) =>
     oboe(
@@ -65,7 +67,7 @@ const readAndMaybeUnzipUsingSaxParser$: Boolean2PathLikeString2Stream =
       )
     );
 
-const saxParserJsonStanza$ =
+export const saxParserJsonStanza$ =
   (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
     readAndMaybeUnzipUsingSaxParser$(needsDecompression)(entryAbsPath).on('done', _);
 
@@ -123,25 +125,26 @@ export function hasDotKibanaPrefix(mainSOIndex: string) {
   return (x: string) => x.startsWith(mainSOIndex);
 }
 
-export type PredicateFunction = (a: string) => boolean;
-export type PathLikeOrString = fs.PathLike | string;
-export type ArchivePathEntry = string;
+export const appendToFile = (filePathF: () => string) => (msg: string) =>
+  writeFileSync(filePathF(), `${msg}\n`, { flag: 'a', encoding: 'utf8' });
 
-const errFilePath = () => resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
-const handleErrToFile = (archivePath: string) => (reason: Error) => {
+export const errFilePath: () => string = () =>
+  resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
+
+const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
   const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
 
   try {
     throw new Error(`${reason}`);
   } catch (err) {
     console.warn(failedMsg);
-    writeFileSync(errFilePath(), `${failedMsg},\n`, { flag: 'a', encoding: 'utf8' });
+    appendToFile(filePathF)(failedMsg);
   }
 
   return toError(reason);
 };
-const doesNotStartWithADot: PredicateFunction = (x) => !x.startsWith('.');
-const readDirectory = (predicate: PredicateFunction) => {
+const doesNotStartWithADot: PredicateFn = (x) => !x.startsWith('.');
+const readDirectory = (predicate: PredicateFn) => {
   return async (path: string) => (await readdir(path)).filter(predicate);
 };
 
@@ -160,7 +163,7 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
       async () => await mappingsAndArchiveFileNames(archivePath),
       (reason: any) => toError(reason)
     ),
-    TE.getOrElse(handleErrToFile(archivePath))
+    TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
 
 // a single stream that emits records from all archive files, in
