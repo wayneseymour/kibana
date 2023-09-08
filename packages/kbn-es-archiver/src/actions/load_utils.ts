@@ -17,7 +17,7 @@ import { REPO_ROOT } from '@kbn/repo-info';
 import * as zlib from 'zlib';
 import oboe from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 import { fromEventPattern } from 'rxjs';
 import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
@@ -31,10 +31,12 @@ export interface Annotated {
   entryAbsPath: string;
   needsDecompression: boolean;
 }
+
 // export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
 export type Pathlike2ResolvedPathLike2Annotated = (a: PathLikeOrString) => (b: string) => Annotated;
 export type PredicateFn = (a: string) => boolean;
-export type PathLikeOrString = fs.PathLike | string;
+export type PathLikeOrString = string | fs.PathLike;
+
 export type ArchivePathEntry = string;
 
 const resolveEntry = (archivePath: PathLikeOrString) => (x: ArchivePathEntry) =>
@@ -68,9 +70,17 @@ const readAndMaybeUnzipUsingSaxParser$ = (needsDecompression) => (entryAbsPath) 
     )
   );
 
+const reportStreamPassOrFail = (err?: Error) => (archiveRelativePath: PathLikeOrString) => {
+  if (err) console.warn(`\nλjs Pipeline failed for \n\t${archiveRelativePath}`, err);
+  else console.log(`\nλjs Pipeline succeeded for \n\t${archiveRelativePath}`);
+};
+
 export const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
-  if (err) console.warn(`\nλjs Pipeline failed for ${entryAbsPath}`, err);
-  else console.log(`\nλjs Pipeline succeeded for ${entryAbsPath}`);
+  pipe(
+    entryAbsPath,
+    relative.bind(null, REPO_ROOT),
+    err ? reportStreamPassOrFail(err) : reportStreamPassOrFail()
+  );
 };
 
 export const passThroughOrDecompress = (needsDecompression: boolean) =>

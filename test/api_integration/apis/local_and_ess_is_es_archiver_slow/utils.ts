@@ -222,8 +222,9 @@ export const isDryRun = (): boolean => {
 export const id = (x: any) => x;
 const fx = (a: FinalResult | string): string => `${chalk.bold.black.bgWhiteBright.underline(a)}`;
 export const tap = (log: ToolingLog) => (environ: RuntimeEnv) => (x: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  environ === 'SERVERLESS' ? console.log(fx(x)) : log.info(fx(x));
+  // environ === 'SERVERLESS' ? console.log(fx(x)) : log.info(fx(x));
+  log.verbose(`\nλjs environ: \n\t${environ}`);
+  console.log(fx(x));
   return x as unknown as FinalResult;
 };
 export const afterAll = (

@@ -38,7 +38,6 @@ export async function loadAction({
   const relativeArchivePath = relFromRoot(inputDir);
 
   const stats = createStats(relativeArchivePath, log);
-  // await straightPipeWithIndexCreation(relativeArchivePath)({
   await straightPipeAll(relativeArchivePath)({
     client,
     stats,

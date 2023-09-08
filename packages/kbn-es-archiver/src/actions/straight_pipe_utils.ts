@@ -9,7 +9,7 @@
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
 import oboe from 'oboe';
-import { PassThrough, pipeline } from 'node:stream';
+import { pipeline } from 'node:stream';
 import fs from 'fs';
 import * as TE from 'fp-ts/TaskEither';
 import { pipe } from 'fp-ts/function';
@@ -55,7 +55,7 @@ const pipelineAll =
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
         originalMakeIndexOrDataStreamStream(indexingArgs),
-        new PassThrough(),
+        // new PassThrough(),
         handlePipelinedStreams(entryAbsPath)
       )
     );
@@ -70,13 +70,15 @@ export const allWrapper$ =
     // ).on('done', handler);
     pipelineAll(needsDecompression)(entryAbsPath)(indexingArgs).on('done', handler);
 
-export const handleStreamToFileWithLimit = (counter: number) => (record: any) => {
-  counter < 3
-    ? // counter > 86_200
-      appendToFile(() => 'stream_out.txt')(JSON.stringify(record, null, 2))
-    : () => {};
-  counter++;
-};
+const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
+const fileOutRecordLimitNotReached = (counter: number): boolean => counter < FILE_OUT_RECORD_LIMIT;
+export const handleStreamToFileWithLimit =
+  (counter: number) =>
+  (record: any): void => {
+    if (fileOutRecordLimitNotReached(counter))
+      appendToFile((): string => 'stream_out.txt')(JSON.stringify(record, null, 2));
+    counter++;
+  };
 
 const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
   const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
