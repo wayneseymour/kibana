@@ -18,19 +18,23 @@ import fs, { createReadStream, writeFileSync } from 'fs';
 import { REPO_ROOT } from '@kbn/repo-info';
 import { readdir } from 'fs/promises';
 import * as zlib from 'zlib';
-import oboe, { Oboe } from 'oboe';
+import oboe from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
 import { resolve } from 'path';
 import { fromEventPattern } from 'rxjs';
 import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
-import { createParseArchiveStreams, isGzip } from '../lib';
+import {
+  createCreateIndexStream as originalMakeIndexOrDataStreamStream,
+  createParseArchiveStreams,
+  isGzip,
+} from '../lib';
 
 export interface Annotated {
   entryAbsPath: string;
   needsDecompression: boolean;
 }
-export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
+// export type Boolean2PathLikeString2Stream = (a: boolean) => (b: PathLikeOrString) => Oboe;
 export type Pathlike2ResolvedPathLike2Annotated = (a: PathLikeOrString) => (b: string) => Annotated;
 export type PredicateFn = (a: string) => boolean;
 export type PathLikeOrString = fs.PathLike | string;
@@ -51,25 +55,54 @@ export const resolveAndAnnotateForDecompression: Pathlike2ResolvedPathLike2Annot
   (pathToArchiveDirectory) => (entryAbsPath) =>
     pipe(entryAbsPath, resolveEntry(pathToArchiveDirectory), annotateForDecompression(isGzip));
 
-const readAndMaybeUnzipUsingSaxParser$: Boolean2PathLikeString2Stream =
-  (needsDecompression) => (x) =>
-    oboe(
-      pipeline(
-        fs.createReadStream(x),
-        needsDecompression ? zlib.createGunzip() : new PassThrough(),
-        (err) => {
-          if (err) {
-            console.warn('\nλjs Pipeline failed.', err);
-          } else {
-            console.log('\nλjs Pipeline succeeded.');
-          }
+// const readAndMaybeUnzipUsingSaxParser$: Boolean2PathLikeString2Stream =
+const readAndMaybeUnzipUsingSaxParser$ = (needsDecompression) => (entryAbsPath) =>
+  oboe(
+    pipeline(
+      fs.createReadStream(entryAbsPath),
+      needsDecompression ? zlib.createGunzip() : new PassThrough(),
+      (err) => {
+        if (err) {
+          console.warn('\nλjs Pipeline failed.', err);
+        } else {
+          console.log('\nλjs Pipeline succeeded.');
         }
+      }
+    )
+  );
+
+const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
+  if (err) console.warn(`\nλjs Pipeline failed for ${entryAbsPath}`, err);
+  else console.log(`\nλjs Pipeline succeeded for ${entryAbsPath}`);
+};
+
+const passThroughOrDecompress = (needsDecompression: boolean) =>
+  needsDecompression ? zlib.createGunzip() : new PassThrough();
+
+const readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$ =
+  (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (indexingArgs) => {
+    return oboe(
+      pipeline(
+        fs.createReadStream(entryAbsPath),
+        passThroughOrDecompress(needsDecompression),
+        originalMakeIndexOrDataStreamStream(indexingArgs),
+        handlePipelinedStreams(entryAbsPath)
       )
     );
+  };
+
+export const saxParserJsonStanzaThenCreateIndex$ =
+  (entryAbsPath: PathLikeOrString) =>
+  (needsDecompression: boolean) =>
+  (handler: () => any) =>
+  (indexingArgs) =>
+    readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$(needsDecompression)(entryAbsPath)(
+      indexingArgs
+    ).on('done', handler);
 
 export const saxParserJsonStanza$ =
-  (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (_: any) =>
-    readAndMaybeUnzipUsingSaxParser$(needsDecompression)(entryAbsPath).on('done', _);
+  (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (handler: () => any) =>
+    readAndMaybeUnzipUsingSaxParser$(needsDecompression)(entryAbsPath).on('done', handler);
 
 // export type Annotated_2_ObservableSubscription = (a: Annotated) => Observable<string>
 // export const jsonStanza$Subscription: Annotated_2_ObservableSubscription = ({

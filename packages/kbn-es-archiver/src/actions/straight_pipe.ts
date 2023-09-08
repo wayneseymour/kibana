@@ -9,8 +9,8 @@ import {
   jsonStanza$Subscription,
   subscribe,
   Annotated,
-  saxParserJsonStanza$,
   appendToFile,
+  saxParserJsonStanzaThenCreateIndex$,
 } from './load_utils';
 
 export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Promise<void> => {
@@ -21,15 +21,16 @@ export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Pr
 
 const handleStreamToFile = (counter: number) => (record: any) => {
   counter < 5
-  // counter > 86_200
-    ? appendToFile(() => 'stream_out.txt')(JSON.stringify(record, null, 2))
+    ? // counter > 86_200
+      appendToFile(() => 'stream_out.txt')(JSON.stringify(record, null, 2))
     : () => {};
   counter++;
 };
 
 export const straightPipeWithIndexCreation =
   (pathToArchiveDirectory: PathLikeOrString) =>
-  async ({ client, stats, skipExisting, docsOnly, log }) => {
+  // async ({ client, stats, skipExisting, docsOnly, log }) => {
+  async (...indexingArgs) => {
     (await archiveEntries(pathToArchiveDirectory))
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory)) // This internal iteration is only handling 2 strings
       .forEach((x: Annotated) => {
@@ -37,8 +38,10 @@ export const straightPipeWithIndexCreation =
         console.log(`\nλjs entryAbsPath: \n\t${entryAbsPath}`);
 
         const i: number = 0;
-        saxParserJsonStanza$(entryAbsPath)(needsDecompression)(handleStreamToFile(i));
-        // createCreateIndexStream({ client, stats, skipExisting, docsOnly, log })
+        // saxParserJsonStanza$(entryAbsPath)(needsDecompression)(handleStreamToFile(i));
+        saxParserJsonStanzaThenCreateIndex$(entryAbsPath)(needsDecompression)(
+          handleStreamToFile(i)
+        )(indexingArgs);
       });
     // .map(pipe(jsonStanza$Subscription, subscribe));
   };
