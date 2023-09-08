@@ -71,7 +71,7 @@ export const allWrapper$ =
     pipelineAll(needsDecompression)(entryAbsPath)(indexingArgs).on('done', handler);
 
 export const handleStreamToFileWithLimit = (counter: number) => (record: any) => {
-  counter < 5
+  counter < 3
     ? // counter > 86_200
       appendToFile(() => 'stream_out.txt')(JSON.stringify(record, null, 2))
     : () => {};
