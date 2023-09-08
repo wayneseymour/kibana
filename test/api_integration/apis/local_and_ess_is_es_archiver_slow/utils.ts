@@ -294,6 +294,7 @@ export async function printInfoAndInitOutputLogging(
   );
   ioFlushAfter(logPathAndFileName(logDirAbsolutePath))(hardware());
 }
+
 export function testsLoop(
   esArchiver: EsArchiver,
   log: ToolingLog,
