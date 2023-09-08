@@ -15,7 +15,7 @@ import type { Client } from '@elastic/elasticsearch';
 import { MAIN_SAVED_OBJECT_INDEX } from '@kbn/core-saved-objects-server';
 import { atLeastOne, freshenUp, hasDotKibanaPrefix, indexingOccurred } from './load_utils';
 import { createStats, migrateSavedObjectIndices, createDefaultSpace } from '../lib';
-import { straightPipeWithIndexCreation } from './straight_pipe';
+import { straightPipeAll } from './straight_pipe';
 
 export async function loadAction({
   inputDir,
@@ -38,16 +38,8 @@ export async function loadAction({
   const relativeArchivePath = relFromRoot(inputDir);
 
   const stats = createStats(relativeArchivePath, log);
-  // await createPromiseFromStreams([
-  //   pipe(
-  //     await mappingAndDataFile(inputDir),
-  //     prioritizeMappings,
-  //     readDir$AndCreateStanzasViaHandJamming$(inputDir)
-  //   ),
-  //   oldCreateIndexOrDataStream$({ client, stats, skipExisting, docsOnly, log }),
-  //   createIndexDocRecordsStreamSvrLess(client, stats, useCreate),
-  // ]);
-  await straightPipeWithIndexCreation(relativeArchivePath)({
+  // await straightPipeWithIndexCreation(relativeArchivePath)({
+  await straightPipeAll(relativeArchivePath)({
     client,
     stats,
     skipExisting,

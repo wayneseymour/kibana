@@ -12,11 +12,8 @@ import type { Client } from '@elastic/elasticsearch';
 
 import { Readable } from 'stream';
 import { pipe } from 'fp-ts/function';
-import * as TE from 'fp-ts/TaskEither';
-import { toError } from 'fp-ts/Either';
 import fs, { createReadStream, writeFileSync } from 'fs';
 import { REPO_ROOT } from '@kbn/repo-info';
-import { readdir } from 'fs/promises';
 import * as zlib from 'zlib';
 import oboe from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
@@ -71,12 +68,12 @@ const readAndMaybeUnzipUsingSaxParser$ = (needsDecompression) => (entryAbsPath) 
     )
   );
 
-const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
+export const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
   if (err) console.warn(`\nλjs Pipeline failed for ${entryAbsPath}`, err);
   else console.log(`\nλjs Pipeline succeeded for ${entryAbsPath}`);
 };
 
-const passThroughOrDecompress = (needsDecompression: boolean) =>
+export const passThroughOrDecompress = (needsDecompression: boolean) =>
   needsDecompression ? zlib.createGunzip() : new PassThrough();
 
 const readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$ =
@@ -90,15 +87,6 @@ const readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$ =
       )
     );
   };
-
-export const saxParserJsonStanzaThenCreateIndex$ =
-  (entryAbsPath: PathLikeOrString) =>
-  (needsDecompression: boolean) =>
-  (handler: () => any) =>
-  (indexingArgs) =>
-    readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$(needsDecompression)(entryAbsPath)(
-      indexingArgs
-    ).on('done', handler);
 
 export const saxParserJsonStanza$ =
   (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (handler: () => any) =>
@@ -163,41 +151,6 @@ export const appendToFile = (filePathF: () => string) => (msg: string) =>
 
 export const errFilePath: () => string = () =>
   resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
-
-const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
-  const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
-
-  try {
-    throw new Error(`${reason}`);
-  } catch (err) {
-    console.warn(failedMsg);
-    appendToFile(filePathF)(failedMsg);
-  }
-
-  return toError(reason);
-};
-const doesNotStartWithADot: PredicateFn = (x) => !x.startsWith('.');
-const readDirectory = (predicate: PredicateFn) => {
-  return async (path: string) => (await readdir(path)).filter(predicate);
-};
-
-const mappingsAndArchiveFileNames = async (pathToDirectory: PathLikeOrString) =>
-  await readDirectory(doesNotStartWithADot)(pathToDirectory as string);
-
-// TODO-TRE: Handle all the cases below?
-/*
- Cases:
- One file, zipped or not
- Two files, either zipped or not
- */
-export const archiveEntries = async (archivePath: PathLikeOrString) =>
-  await pipe(
-    TE.tryCatch(
-      async () => await mappingsAndArchiveFileNames(archivePath),
-      (reason: any) => toError(reason)
-    ),
-    TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
-  )();
 
 // a single stream that emits records from all archive files, in
 // order, so that createIndexStream can track the state of indexes
