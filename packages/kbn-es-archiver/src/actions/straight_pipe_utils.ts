@@ -101,6 +101,8 @@ export const handleStreamToFileWithLimitAndContinue =
       appendToFile(filePathF)(JSON.stringify(record, null, 2));
 
     counterLowerBound++;
+
+    return record;
   };
 
 const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {

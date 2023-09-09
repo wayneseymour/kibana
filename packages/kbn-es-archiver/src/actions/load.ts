@@ -44,6 +44,7 @@ export async function loadAction({
     skipExisting,
     docsOnly,
     log,
+    useCreate,
   });
   /*
    The two expressions above could be a promise.all or TaskEither.sequence!
