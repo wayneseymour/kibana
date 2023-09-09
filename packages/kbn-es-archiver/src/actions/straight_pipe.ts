@@ -16,7 +16,8 @@ import {
   archiveEntries,
   prependStreamOut,
   Void2String,
-  handleStreamToFileWithLimit,
+  handleStreamToFileWithLimitAndContinue,
+  // handleStreamToFileWithLimit,
 } from './straight_pipe_utils';
 
 const streamOutF: Void2String = () => 'stream_out.txt';
@@ -42,7 +43,8 @@ export const straightPipeAll =
             //
             // i++;
 
-            handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+            // handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+            handleStreamToFileWithLimitAndContinue(streamOutF)(0)(singleJsonRecord);
           }
         );
       });

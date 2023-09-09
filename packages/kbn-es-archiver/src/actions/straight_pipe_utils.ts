@@ -93,6 +93,16 @@ export const handleStreamToFileWithLimit =
     counterLowerBound++;
   };
 
+export const handleStreamToFileWithLimitAndContinue =
+  (filePathF: Void2String) =>
+  (counterLowerBound: number) =>
+  (record: any): void => {
+    if (fileOutRecordLimitNotReached(counterLowerBound))
+      appendToFile(filePathF)(JSON.stringify(record, null, 2));
+
+    counterLowerBound++;
+  };
+
 const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
   const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
 
