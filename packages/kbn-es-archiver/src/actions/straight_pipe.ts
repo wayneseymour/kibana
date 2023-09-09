@@ -3,15 +3,6 @@
 
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
-import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
-import {
-  pipelineAll,
-  archiveEntries,
-  handleStreamToFileWithLimit,
-  clearFile,
-  Void2String,
-} from './straight_pipe_utils';
-
 // This just 'outs' the records to the terminal
 // export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Promise<void> => {
 //   (await archiveEntries(pathToArchiveDirectory))
@@ -19,11 +10,21 @@ import {
 //     .map(pipe(jsonStanza$Subscription, subscribe));
 // };
 
+import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
+import {
+  pipelineAll,
+  archiveEntries,
+  handleStreamToFileWithLimit,
+  prependStreamOut,
+  Void2String,
+} from './straight_pipe_utils';
+
 const streamOutF: Void2String = () => 'stream_out.txt';
 
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
   async (...indexOrDataStreamCreationArgs) => {
+    prependStreamOut(streamOutF);
     (await archiveEntries(pathToArchiveDirectory))
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
       .forEach((x: Annotated) => {
@@ -31,7 +32,6 @@ export const straightPipeAll =
         pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
           'done',
           (shouldBeASingleRecord) => {
-            clearFile(streamOutF);
             handleStreamToFileWithLimit(streamOutF)(0)(shouldBeASingleRecord);
           }
         );

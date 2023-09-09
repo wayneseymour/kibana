@@ -17,6 +17,7 @@ import { toError } from 'fp-ts/Either';
 import { readdir } from 'fs/promises';
 import { resolve } from 'path';
 import { REPO_ROOT } from '@kbn/repo-info';
+import { DateTime } from 'luxon';
 import {
   handlePipelinedStreams,
   passThroughOrDecompress,
@@ -72,10 +73,13 @@ export const errFilePath: Void2String = () =>
   resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
 
 const encoding = 'utf8';
-export const clearFile = (filePathF: () => string): void => {
+const luxonNow = (): DateTime => DateTime.fromISO(DateTime.now().toString());
+
+export const prependStreamOut = (filePathF: () => string): void => {
   const writeToFile = writeFileSync.bind(null, filePathF());
-  writeToFile('', { encoding });
+  writeToFile(`λjs Stream Out @ ${luxonNow()}\n---\n\n`, { encoding });
 };
+
 export const appendToFile = (filePathF: Void2String) => (msg: string) =>
   writeFileSync(filePathF(), `${msg}\n`, { flag: 'a', encoding: 'utf8' });
 
