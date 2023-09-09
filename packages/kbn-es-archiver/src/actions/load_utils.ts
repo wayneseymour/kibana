@@ -12,7 +12,7 @@ import type { Client } from '@elastic/elasticsearch';
 
 import { Readable } from 'stream';
 import { pipe } from 'fp-ts/function';
-import fs, { createReadStream, writeFileSync } from 'fs';
+import fs, { createReadStream } from 'fs';
 import { REPO_ROOT } from '@kbn/repo-info';
 import * as zlib from 'zlib';
 import oboe from 'oboe';
@@ -71,8 +71,8 @@ const readAndMaybeUnzipUsingSaxParser$ = (needsDecompression) => (entryAbsPath) 
   );
 
 const reportStreamPassOrFail = (err?: Error) => (archiveRelativePath: PathLikeOrString) => {
-  if (err) console.warn(`\nλjs Pipeline failed for \n\t${archiveRelativePath}`, err);
-  else console.log(`\nλjs Pipeline succeeded for \n\t${archiveRelativePath}`);
+  if (err) console.warn(`\nλjs Pipeline failed for \n\t[${archiveRelativePath}]\n`, err);
+  else console.log(`\nλjs Pipeline succeeded for \n\t[${archiveRelativePath}]\n`);
 };
 
 export const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
@@ -155,12 +155,6 @@ export async function freshenUp(client: Client, indicesWithDocs: string[]): Prom
 export function hasDotKibanaPrefix(mainSOIndex: string) {
   return (x: string) => x.startsWith(mainSOIndex);
 }
-
-export const appendToFile = (filePathF: () => string) => (msg: string) =>
-  writeFileSync(filePathF(), `${msg}\n`, { flag: 'a', encoding: 'utf8' });
-
-export const errFilePath: () => string = () =>
-  resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
 
 // a single stream that emits records from all archive files, in
 // order, so that createIndexStream can track the state of indexes

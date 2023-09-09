@@ -10,14 +10,14 @@
 
 import oboe from 'oboe';
 import { pipeline } from 'node:stream';
-import fs from 'fs';
+import fs, { writeFileSync } from 'fs';
 import * as TE from 'fp-ts/TaskEither';
 import { pipe } from 'fp-ts/function';
 import { toError } from 'fp-ts/Either';
 import { readdir } from 'fs/promises';
+import { resolve } from 'path';
+import { REPO_ROOT } from '@kbn/repo-info';
 import {
-  appendToFile,
-  errFilePath,
   handlePipelinedStreams,
   passThroughOrDecompress,
   PathLikeOrString,
@@ -63,14 +63,30 @@ export const pipelineAll =
     );
   };
 
+export type Void2String = () => string;
 const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
-const fileOutRecordLimitNotReached = (counter: number): boolean => counter < FILE_OUT_RECORD_LIMIT;
+const fileOutRecordLimitNotReached = (counterLowerBound: number): boolean =>
+  counterLowerBound < FILE_OUT_RECORD_LIMIT;
+
+export const errFilePath: Void2String = () =>
+  resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
+
+const encoding = 'utf8';
+export const clearFile = (filePathF: () => string): void => {
+  const writeToFile = writeFileSync.bind(null, filePathF());
+  writeToFile('', { encoding });
+};
+export const appendToFile = (filePathF: Void2String) => (msg: string) =>
+  writeFileSync(filePathF(), `${msg}\n`, { flag: 'a', encoding: 'utf8' });
+
 export const handleStreamToFileWithLimit =
-  (counter: number) =>
+  (filePathF: Void2String) =>
+  (counterLowerBound: number) =>
   (record: any): void => {
-    if (fileOutRecordLimitNotReached(counter))
-      appendToFile((): string => 'stream_out.txt')(JSON.stringify(record, null, 2));
-    counter++;
+    if (fileOutRecordLimitNotReached(counterLowerBound))
+      appendToFile(filePathF)(JSON.stringify(record, null, 2));
+
+    counterLowerBound++;
   };
 
 const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
