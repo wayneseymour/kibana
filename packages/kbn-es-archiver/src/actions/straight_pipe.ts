@@ -11,15 +11,11 @@
 // };
 
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
-import {
-  pipelineAll,
-  archiveEntries,
-  handleStreamToFileWithLimit,
-  prependStreamOut,
-  Void2String,
-} from './straight_pipe_utils';
+import { pipelineAll, archiveEntries, prependStreamOut, Void2String } from './straight_pipe_utils';
 
 const streamOutF: Void2String = () => 'stream_out.txt';
+
+let i = 0;
 
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
@@ -32,7 +28,14 @@ export const straightPipeAll =
         pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
           'done',
           (shouldBeASingleRecord) => {
-            handleStreamToFileWithLimit(streamOutF)(0)(shouldBeASingleRecord);
+            if (i < 3)
+              console.log(
+                `\nλjs shouldBeASingleRecord: \n\t${JSON.stringify(shouldBeASingleRecord, null, 2)}`
+              );
+            if (i > 3) process.exit(666); // Trez Exit Expression
+
+            i++;
+            // handleStreamToFileWithLimit(streamOutF)(0)(shouldBeASingleRecord);
           }
         );
       });
