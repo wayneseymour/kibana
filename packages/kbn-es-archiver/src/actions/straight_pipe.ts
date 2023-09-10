@@ -10,15 +10,13 @@
 //     .map(pipe(jsonStanza$Subscription, subscribe));
 // };
 
-import Stream from 'stream';
-import { of } from 'rxjs';
-import { ES_CLIENT_HEADERS } from '../client_headers';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
   pipelineAll,
   archiveEntries,
   prependStreamOut,
   Void2String,
+  prokSingleRecordAfterPipelining,
   // handleStreamToFileWithLimitAndContinue,
   // handleStreamToFileWithLimit,
 } from './straight_pipe_utils';
@@ -37,82 +35,69 @@ export const straightPipeAll =
         const { entryAbsPath, needsDecompression } = x;
         pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
           'done',
-          (singleJsonRecord) => {
-            // if (i < 3)
-            //   console.log(
-            //     `\nλjs shouldBeASingleRecord: \n\t${JSON.stringify(singleJsonRecord, null, 2)}`
-            //   );
-            // if (i > 3) process.exit(666); // Trez Exit Expression
-            //
-            // i++;
-
-            // handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord)
-
-            // handleStreamToFileWithLimitAndContinue(streamOutF)(0)(singleJsonRecord)
-            of(singleJsonRecord).subscribe(async (record) => {
-              await indexDocWith(indexOrDataStreamCreationArgs)(record);
-            });
-          }
+          prokSingleRecordAfterPipelining
         );
       });
   };
-const indexDocWith =
-  ({ client }) =>
-  async (singleRecord: any) => {
-    // console.log(`\nλjs doc: \n${JSON.stringify(doc, null, 2)}`);
+const indexDocWith = (indexOrDataStreamCreationArgs) => (singleRecord: any) => {
+  console.log(`\nλjs singleRecord: \n${JSON.stringify(singleRecord, null, 2)}`);
+  // console.log(`\nλjs doc: \n${JSON.stringify(doc, null, 2)}`);
 
-    // doc.id ?
-    await client.helpers.bulk(
-      {
-        retries: 5,
-        datasource: [singleRecord],
-        onDocument(doc) {
-          return [{ index: { _index: 'date-nested' } }, doc];
-        },
-        onDrop(dropped) {
-          console.log('\nλjs Dropped!!!');
-          const dj = JSON.stringify(dropped.document);
-          const ej = JSON.stringify(dropped.error);
-          console.log(`\nλjs dj: \n${JSON.stringify(dj, null, 2)}`);
-          console.log(`\nλjs ej: \n${JSON.stringify(ej, null, 2)}`);
-        },
-      },
-      {
-        headers: ES_CLIENT_HEADERS,
-      }
-    );
+  // doc.id ?
+  // const {client} = indexOrDataStreamCreationArgs;
 
-    // if (errors.length) {
-    //   throw new AggregateError(errors);
-    // }
-    //
-    // for (const doc of docs) {
-    //   stats.indexedDoc(doc.data_stream || doc.index);
-    // }
-  };
+  // client.helpers.bulk(
+  //   {
+  //     retries: 5,
+  //     datasource: [singleRecord],
+  //     onDocument(doc) {
+  //       return [{index: {_index: 'date-nested'}}, doc];
+  //     },
+  //     onDrop(dropped) {
+  //       console.log('\nλjs Dropped!!!');
+  //       const dj = JSON.stringify(dropped.document);
+  //       const ej = JSON.stringify(dropped.error);
+  //       console.log(`\nλjs dj: \n${JSON.stringify(dj, null, 2)}`);
+  //       console.log(`\nλjs ej: \n${JSON.stringify(ej, null, 2)}`);
+  //     },
+  //   },
+  //   {
+  //     headers: ES_CLIENT_HEADERS,
+  //   }
+  // )
 
+  // if (errors.length) {
+  //   throw new AggregateError(errors);
+  // }
+  //
+  // for (const doc of docs) {
+  //   stats.indexedDoc(doc.data_stream || doc.index);
+  // }
+};
+// const count = await client.count({ index: 'tweets' })
+// console.log(count)
 enum BulkOperation {
   Create = 'create',
   Index = 'index',
 }
 
-const ingest = (indexOrDataStreamCreationArgs) => async (record: any) => {
-  // console.log(`\nλjs docs: \n${JSON.stringify(docs, null, 2)}`);
-
-  const { client, stats, skipExisting, docsOnly, log, useCreate } =
-    indexOrDataStreamCreationArgs[0];
-  const readable = Stream.Readable.from(record);
-  readable.on('data', (chunk) => {
-    console.log(chunk); // will be called once with `"input string"`
-  });
-  // const body = [{ index: { _index: 'date-nested' } }, record];
-  // console.log(`\nλjs body: \n${JSON.stringify(body, null, 2)}`);
-  // const bulkResponse = await client.bulk({ refresh: true, body });
-  // console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
-};
-
-// function parseSumthin(xs) {
-//   return xs.flatMap((doc) => {
-//     return [{ index: { _index } }, doc];
+// const ingest = (indexOrDataStreamCreationArgs) => async (record: any) => {
+//   // console.log(`\nλjs docs: \n${JSON.stringify(docs, null, 2)}`);
+//
+//   const { client, stats, skipExisting, docsOnly, log, useCreate } =
+//     indexOrDataStreamCreationArgs[0];
+//   const readable = Stream.Readable.from(record);
+//   readable.on('data', (chunk) => {
+//     console.log(chunk); // will be called once with `"input string"`
 //   });
-// }
+//   // const body = [{ index: { _index: 'date-nested' } }, record];
+//   // console.log(`\nλjs body: \n${JSON.stringify(body, null, 2)}`);
+//   // const bulkResponse = await client.bulk({ refresh: true, body });
+//   // console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
+// };
+//
+// // function parseSumthin(xs) {
+// //   return xs.flatMap((doc) => {
+// //     return [{ index: { _index } }, doc];
+// //   });
+// // }

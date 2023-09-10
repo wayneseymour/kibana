@@ -12,8 +12,8 @@ import oboe from 'oboe';
 import { pipeline } from 'node:stream';
 import fs, { writeFileSync } from 'fs';
 import * as TE from 'fp-ts/TaskEither';
-import { pipe } from 'fp-ts/function';
-import { toError } from 'fp-ts/Either';
+import { flow, pipe } from 'fp-ts/function';
+import { chain, Either, fromNullable, getOrElse, toError } from 'fp-ts/Either';
 import { readdir } from 'fs/promises';
 import { resolve } from 'path';
 import { REPO_ROOT } from '@kbn/repo-info';
@@ -48,6 +48,17 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     ),
     TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
+export const pluck =
+  (key: string) =>
+  (obj: any): Either<Error, string> =>
+    fromNullable(new Error(`Missing ${key}`))(obj[key]);
+
+export const recordsIndexName = (record) =>
+  flow(
+    pluck('value'),
+    chain(pluck('index')),
+    getOrElse((err: Error) => err.message)
+  )(record);
 
 export const pipelineAll =
   (needsDecompression: boolean) =>
@@ -59,11 +70,40 @@ export const pipelineAll =
         passThroughOrDecompress(needsDecompression),
         originalMakeIndexOrDataStreamStream(indexOrDataStreamCreationArgs),
         // new PassThrough(),
+        // new Writable({
+        //   write(chunk, encoding, callback) {
+        //     const obj = JSON.parse(chunk.toString())
+        //     // const _index = flow(
+        //     //   pluck('value'),
+        //     //   chain(pluck('index')),
+        //     //   getOrElse((err: Error) => err.message)
+        //     // )(obj)
+        //
+        //     const _index = recordsIndexName(obj);
+        //     console.log(`\nλjs _index: \n\t${_index}`);
+        //     callback();
+        //   }
+        // }),
         handlePipelinedStreams(entryAbsPath)
       )
     );
   };
+export const prokSingleRecordAfterPipelining = (singleJsonRecord) => {
+  const _index = recordsIndexName(singleJsonRecord);
+  console.log(`\nλjs _index: \n\t${_index}`);
 
+  // if (i < 3)
+  //   console.log(
+  //     `\nλjs shouldBeASingleRecord: \n\t${JSON.stringify(singleJsonRecord, null, 2)}`
+  //   );
+  // if (i > 3) process.exit(666); // Trez Exit Expression
+  //
+  // i++;
+
+  // handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord)
+
+  // handleStreamToFileWithLimitAndContinue(streamOutF)(0)(singleJsonRecord)
+};
 export type Void2String = () => string;
 const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
 const fileOutRecordLimitNotReached = (counterLowerBound: number): boolean =>
