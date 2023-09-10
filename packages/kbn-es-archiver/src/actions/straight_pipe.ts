@@ -10,13 +10,14 @@
 //     .map(pipe(jsonStanza$Subscription, subscribe));
 // };
 
+import { fromEventPattern } from 'rxjs';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
   pipelineAll,
   archiveEntries,
   prependStreamOut,
   Void2String,
-  prokSingleRecordAfterPipelining,
+  recordsIndexName,
   // handleStreamToFileWithLimitAndContinue,
   // handleStreamToFileWithLimit,
 } from './straight_pipe_utils';
@@ -33,12 +34,25 @@ export const straightPipeAll =
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
       .forEach((x: Annotated) => {
         const { entryAbsPath, needsDecompression } = x;
-        pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
-          'done',
-          prokSingleRecordAfterPipelining
-        );
+
+        // const folded$ = (_) => pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on('node', '!.*', _);
+        const folded$ = (_) =>
+          pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
+            'done',
+            _
+          );
+
+        fromEventPattern(folded$).subscribe({
+          next: (singleJsonRecord) => {
+            const _index = recordsIndexName(singleJsonRecord);
+            console.log(`\nλjs _index: \n\t${_index}`);
+          },
+          error: (err) => console.log('error:', err),
+          complete: () => console.log('the end'),
+        });
       });
   };
+
 const indexDocWith = (indexOrDataStreamCreationArgs) => (singleRecord: any) => {
   console.log(`\nλjs singleRecord: \n${JSON.stringify(singleRecord, null, 2)}`);
   // console.log(`\nλjs doc: \n${JSON.stringify(doc, null, 2)}`);
