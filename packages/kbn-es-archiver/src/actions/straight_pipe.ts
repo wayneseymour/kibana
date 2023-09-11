@@ -3,15 +3,6 @@
 
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
-// This just 'outs' the records to the terminal
-// export const straightPipe = async (pathToArchiveDirectory: PathLikeOrString): Promise<void> => {
-//   (await archiveEntries(pathToArchiveDirectory))
-//     .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
-//     .map(pipe(jsonStanza$Subscription, subscribe));
-// };
-
-import { Client } from '@elastic/elasticsearch';
-
 import { bufferCount, fromEventPattern } from 'rxjs';
 import { ToolingLog } from '@kbn/tooling-log';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
@@ -19,38 +10,12 @@ import {
   pipelineAll,
   archiveEntries,
   prependStreamOut,
-  Void2String,
-  recordsIndexName,
-  handleStreamToFileWithLimit,
+  handleNextBuffered,
+  streamOutF,
+  streamOutFileNameFn,
 } from './straight_pipe_utils';
 
 const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
-
-const streamOutF: Void2String = () => 'stream_out.txt';
-
-const i = 0;
-const handleNextSingle = (client: Client) => async (singleJsonRecord) => {
-  const _index = recordsIndexName(singleJsonRecord);
-  // console.log(`\nλjs _index: \n\t${_index}`);
-  const payload = [{ index: { _index } }, singleJsonRecord];
-  handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
-
-  console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
-};
-
-type BufferedJsonRecordsCollection = any[];
-
-const handleNextBuffered =
-  (client: Client) => (log: ToolingLog) => async (xs: BufferedJsonRecordsCollection) => {
-    console.log(`\nλjs xs: \n${JSON.stringify(xs, null, 2)}`);
-    handleStreamToFileWithLimit(streamOutF)(0)(xs);
-    process.exit(666); // Trez Exit Expression
-    // const _index = recordsIndexName(singleJsonRecord);
-    // console.log(`\nλjs _index: \n\t${_index}`);
-    // const payload = [{ index: { _index } }, singleJsonRecord];
-
-    // console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
-  };
 
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
@@ -71,14 +36,9 @@ export const straightPipeAll =
         const { client } = indexOrDataStreamCreationArgs;
         fromEventPattern(foldedStreams)
           .pipe(bufferCount(BUFFER_SIZE))
-          .subscribe(handleNextBuffered(client)(log));
+          .subscribe(handleNextBuffered(streamOutFileNameFn)(client)(log));
       });
   };
-
-enum BulkOperation {
-  Create = 'create',
-  Index = 'index',
-}
 
 // const ingest = (indexOrDataStreamCreationArgs) => async (record: any) => {
 //   // console.log(`\nλjs docs: \n${JSON.stringify(docs, null, 2)}`);
@@ -95,8 +55,3 @@ enum BulkOperation {
 //   // console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
 // };
 //
-// // function parseSumthin(xs) {
-// //   return xs.flatMap((doc) => {
-// //     return [{ index: { _index } }, doc];
-// //   });
-// // }

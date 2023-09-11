@@ -18,6 +18,8 @@ import { readdir } from 'fs/promises';
 import { resolve } from 'path';
 import { REPO_ROOT } from '@kbn/repo-info';
 import { DateTime } from 'luxon';
+import { Client } from '@elastic/elasticsearch';
+import { ToolingLog } from '@kbn/tooling-log';
 import {
   handlePipelinedStreams,
   passThroughOrDecompress,
@@ -48,17 +50,6 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     ),
     TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
-export const pluck =
-  (key: string) =>
-  (obj: any): Either<Error, string> =>
-    fromNullable(new Error(`Missing ${key}`))(obj[key]);
-
-export const recordsIndexName = (record) =>
-  flow(
-    pluck('value'),
-    chain(pluck('index')),
-    getOrElse((err: Error) => err.message)
-  )(record);
 
 export const pipelineAll =
   (needsDecompression: boolean) =>
@@ -157,3 +148,65 @@ const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (r
 
   return toError(reason);
 };
+
+enum BulkOperation {
+  Create = 'create',
+  Index = 'index',
+}
+
+const i = 0;
+export const handleNextSingle = (client: Client) => async (singleJsonRecord) => {
+  const _index = recordsIndexName(singleJsonRecord);
+  // console.log(`\nλjs _index: \n\t${_index}`);
+  const payload = [{ index: { _index } }, singleJsonRecord];
+  handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+
+  console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
+};
+
+export const annotateIndex = (_index) => (xs) => {
+  return xs.flatMap((doc) => {
+    return [{ index: { _index } }, doc];
+  });
+};
+
+export const ingestList = (log) => async (xs) => {
+  await bulkIngest();
+
+  async function bulkIngest() {
+    // log.verbose(`\n${ccMark} Ingesting ${xs.length} docs at a time`);
+    // const body = parseIndexes(xs);
+    //
+    // const bulkResponse = await client.bulk({ refresh: true, body });
+    //
+    // handleErrors(body, bulkResponse)(log);
+  }
+};
+export const streamOutFileNameFn: Void2String = () => 'stream_out.txt';
+
+type BufferedJsonRecordsCollection = any[];
+export const handleNextBuffered =
+  (streamOutF: typeof streamOutFileNameFn) =>
+  (client: Client) =>
+  (log: ToolingLog) =>
+  async (xs: BufferedJsonRecordsCollection) => {
+    // console.log(`\nλjs xs: \n${JSON.stringify(xs, null, 2)}`);
+    handleStreamToFileWithLimit(streamOutF)(0)(xs);
+    process.exit(666); // Trez Exit Expression
+    // const _index = recordsIndexName(singleJsonRecord);
+    // console.log(`\nλjs _index: \n\t${_index}`);
+    // const payload = [{ index: { _index } }, singleJsonRecord];
+
+    // console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
+  };
+export const pluck =
+  (key: string) =>
+  (obj: any): Either<Error, string> =>
+    fromNullable(new Error(`Missing ${key}`))(obj[key]);
+
+export const recordsIndexName = (record) =>
+  flow(
+    pluck('value'),
+    chain(pluck('index')),
+    getOrElse((err: Error) => err.message)
+  )(record);
