@@ -7,11 +7,10 @@ import { bufferCount, fromEventPattern } from 'rxjs';
 import { ToolingLog } from '@kbn/tooling-log';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
+  prependStreamOut,
   pipelineAll,
   archiveEntries,
-  prependStreamOut,
-  handleNextBuffered,
-  streamOutF,
+  addIndexNameForBulkIngest,
   streamOutFileNameFn,
 } from './straight_pipe_utils';
 
@@ -20,13 +19,22 @@ const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
   (log: ToolingLog) =>
+  // TODO-TRE: Drop non-needed keys
   async (...indexOrDataStreamCreationArgs) => {
-    prependStreamOut(streamOutF);
+    // TODO-TRE: Drop stream "outing" when actually running
+    // against serverless.
+    prependStreamOut(streamOutFileNameFn);
+
     (await archiveEntries(pathToArchiveDirectory))
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
       .forEach((x: Annotated) => {
         const { entryAbsPath, needsDecompression } = x;
 
+        /*
+         Pipelining the read stream that's prioritized to have the mappings json (zipped or not),
+         into a maybe-decompress stream,
+         into a create the index or data stream, stream :),
+         */
         const foldedStreams = (_) =>
           pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
             'done',
@@ -34,9 +42,18 @@ export const straightPipeAll =
           );
 
         const { client } = indexOrDataStreamCreationArgs;
+
         fromEventPattern(foldedStreams)
           .pipe(bufferCount(BUFFER_SIZE))
-          .subscribe(handleNextBuffered(streamOutFileNameFn)(client)(log));
+          .subscribe((as) => {
+            const updated = addIndexNameForBulkIngest(client)(log)(as);
+            console.log(`\nλjs updated: \n${JSON.stringify(updated, null, 2)}`);
+          });
+        // .subscribe((xs: BufferedJsonRecordsCollection) =>
+        //   pipe(xs, addIndexNameForBulkIngest(client)(log), (as) => {
+        //     console.log(`\nλjs as: \n${JSON.stringify(as, null, 2)}`)
+        //   })
+        // );
       });
   };
 

@@ -60,21 +60,6 @@ export const pipelineAll =
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
         originalMakeIndexOrDataStreamStream(indexOrDataStreamCreationArgs),
-        // new PassThrough(),
-        // new Writable({
-        //   write(chunk, encoding, callback) {
-        //     const obj = JSON.parse(chunk.toString())
-        //     // const _index = flow(
-        //     //   pluck('value'),
-        //     //   chain(pluck('index')),
-        //     //   getOrElse((err: Error) => err.message)
-        //     // )(obj)
-        //
-        //     const _index = recordsIndexName(obj);
-        //     console.log(`\nλjs _index: \n\t${_index}`);
-        //     callback();
-        //   }
-        // }),
         handlePipelinedStreams(entryAbsPath)
       )
     );
@@ -159,54 +144,29 @@ export const handleNextSingle = (client: Client) => async (singleJsonRecord) => 
   const _index = recordsIndexName(singleJsonRecord);
   // console.log(`\nλjs _index: \n\t${_index}`);
   const payload = [{ index: { _index } }, singleJsonRecord];
-  handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+  handleStreamToFileWithLimit(streamOutFileNameFn)(0)(singleJsonRecord);
 
   console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
 };
 
-export const annotateIndex = (_index) => (xs) => {
-  return xs.flatMap((doc) => {
-    return [{ index: { _index } }, doc];
-  });
-};
-
-export const ingestList = (log) => async (xs) => {
-  await bulkIngest();
-
-  async function bulkIngest() {
-    // log.verbose(`\n${ccMark} Ingesting ${xs.length} docs at a time`);
-    // const body = parseIndexes(xs);
-    //
-    // const bulkResponse = await client.bulk({ refresh: true, body });
-    //
-    // handleErrors(body, bulkResponse)(log);
-  }
-};
 export const streamOutFileNameFn: Void2String = () => 'stream_out.txt';
 
-type BufferedJsonRecordsCollection = any[];
-export const handleNextBuffered =
-  (streamOutF: typeof streamOutFileNameFn) =>
-  (client: Client) =>
-  (log: ToolingLog) =>
-  async (xs: BufferedJsonRecordsCollection) => {
-    // console.log(`\nλjs xs: \n${JSON.stringify(xs, null, 2)}`);
-    handleStreamToFileWithLimit(streamOutF)(0)(xs);
-    process.exit(666); // Trez Exit Expression
-    // const _index = recordsIndexName(singleJsonRecord);
-    // console.log(`\nλjs _index: \n\t${_index}`);
-    // const payload = [{ index: { _index } }, singleJsonRecord];
-
-    // console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
+export type BufferedJsonRecordsCollection = any[];
+export const addIndexNameForBulkIngest =
+  // (streamOutF: typeof streamOutFileNameFn) =>
+  (client: Client) => (log: ToolingLog) => (xs: BufferedJsonRecordsCollection) => {
+    const res = xs.flatMap((doc) => [{ index: { _index: recordsIndexName(xs[0]) } }, doc]);
+    return res;
   };
-export const pluck =
+
+export const pluckKeyName =
   (key: string) =>
   (obj: any): Either<Error, string> =>
     fromNullable(new Error(`Missing ${key}`))(obj[key]);
 
 export const recordsIndexName = (record) =>
   flow(
-    pluck('value'),
-    chain(pluck('index')),
+    pluckKeyName('value'),
+    chain(pluckKeyName('index')),
     getOrElse((err: Error) => err.message)
   )(record);
