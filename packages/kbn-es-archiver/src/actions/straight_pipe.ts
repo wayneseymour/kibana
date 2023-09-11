@@ -12,7 +12,7 @@
 
 import { Client } from '@elastic/elasticsearch';
 
-import { fromEventPattern } from 'rxjs';
+import { bufferCount, fromEventPattern } from 'rxjs';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
   pipelineAll,
@@ -25,6 +25,8 @@ import {
   // handleStreamToFileWithLimit,
 } from './straight_pipe_utils';
 
+const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
+
 const streamOutF: Void2String = () => 'stream_out.txt';
 
 const i = 0;
@@ -36,10 +38,21 @@ const handleNextSingle = (client: Client) => async (singleJsonRecord) => {
 
   console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
 };
-// const BUFFER_SIZE = process.env.BUFFER_SIZE || 1;
 // const handleNextBuffered = (xs) => {
 //   console.log(`\nλjs xs: \n${JSON.stringify(xs, null, 2)}`);
 // };
+
+const handleNextBuffered = (client: Client) => async (xs) => {
+  console.log(`\nλjs xs: \n${JSON.stringify(xs, null, 2)}`);
+  process.exit(666); // Trez Exit Expression
+  // const _index = recordsIndexName(singleJsonRecord);
+  // console.log(`\nλjs _index: \n\t${_index}`);
+  // const payload = [{ index: { _index } }, singleJsonRecord];
+  // handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+
+  // console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
+};
+
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) =>
   async (...indexOrDataStreamCreationArgs) => {
@@ -58,10 +71,10 @@ export const straightPipeAll =
 
         const { client } = indexOrDataStreamCreationArgs;
         fromEventPattern(foldedStreams)
-          // .pipe(bufferCount(BUFFER_SIZE))
+          .pipe(bufferCount(BUFFER_SIZE))
           .subscribe({
-            next: handleNextSingle(client),
-            // next: handleNextBuffered,
+            // next: handleNextSingle(client),
+            next: handleNextBuffered(client),
             error: (err) => console.log('error:', err),
             complete: () => console.log('the end'),
           });
@@ -109,15 +122,6 @@ enum BulkOperation {
   Create = 'create',
   Index = 'index',
 }
-export const ingest = async (x) => {
-  await bulkIngest();
-
-  async function bulkIngest() {
-    const bulkResponse = await client.bulk({ refresh: true, body });
-
-    // handleErrors(body, bulkResponse)(log);
-  }
-};
 
 // const ingest = (indexOrDataStreamCreationArgs) => async (record: any) => {
 //   // console.log(`\nλjs docs: \n${JSON.stringify(docs, null, 2)}`);
