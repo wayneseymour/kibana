@@ -13,6 +13,7 @@ import {
   addIndexNameForBulkIngest,
   streamOutFileNameFn,
 } from './straight_pipe_utils';
+import { straightPipeIngestList } from './straight_pipe_ingest';
 
 const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
 
@@ -31,9 +32,9 @@ export const straightPipeAll =
         const { entryAbsPath, needsDecompression } = x;
 
         /*
-         Pipelining the read stream that's prioritized to have the mappings json (zipped or not),
+         Pipelining the read stream that's prioritized to have the mappings json || data file (zipped or not),
          into a maybe-decompress stream,
-         into a create the index or data stream, stream :),
+         then, into a create the index or data stream, stream :) lol
          */
         const foldedStreams = (_) =>
           pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
