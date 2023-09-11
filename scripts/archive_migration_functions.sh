@@ -361,11 +361,23 @@ load_es() {
 }
 
 unload_es() {
+  local tgt=${1:-$orig_archive}
+  echo "### tgt: ${tgt}"
+
   set -x
-  node scripts/es_archiver.js unload "$orig_archive"
+  CI_STATS_DISABLED=true node scripts/es_archiver.js unload "$tgt"
   set +x
 }
 
+unload_es_straight_pipe() {
+ local xs=('x-pack/test/functional/es_archives/logstash_functional' 'test/functional/fixtures/es_archiver/many_fields' 'x-pack/test/functional/es_archives/ml/farequote')
+
+      for x in "${xs[@]}"; do
+        echo "### x: ${x}"
+        unload_es "${x}"
+      done
+
+}
 save_es_archive_without_kibana_objects() {
   local indexName=${1:?"You must pass the name of the index!"}
   set -x
