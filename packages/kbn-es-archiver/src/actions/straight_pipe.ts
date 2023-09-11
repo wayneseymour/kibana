@@ -20,6 +20,7 @@ import {
   prependStreamOut,
   Void2String,
   recordsIndexName,
+  handleStreamToFileWithLimit,
   // handleStreamToFileWithLimitAndContinue,
   // handleStreamToFileWithLimit,
 } from './straight_pipe_utils';
@@ -31,6 +32,8 @@ const handleNextSingle = (client: Client) => async (singleJsonRecord) => {
   const _index = recordsIndexName(singleJsonRecord);
   // console.log(`\nλjs _index: \n\t${_index}`);
   const payload = [{ index: { _index } }, singleJsonRecord];
+  handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord);
+
   console.log(`\nλjs payload: \n${JSON.stringify(payload, null, 2)}`);
 };
 // const BUFFER_SIZE = process.env.BUFFER_SIZE || 1;
