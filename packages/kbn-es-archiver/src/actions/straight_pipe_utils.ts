@@ -52,14 +52,12 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
   )();
 
 export const pipelineAll =
-  (needsDecompression: boolean) =>
-  (entryAbsPath: PathLikeOrString) =>
-  (indexOrDataStreamCreationArgs) => {
+  (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (destOpts) => {
     return oboe(
       pipeline(
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
-        originalMakeIndexOrDataStreamStream(indexOrDataStreamCreationArgs),
+        originalMakeIndexOrDataStreamStream(destOpts),
         handlePipelinedStreams(entryAbsPath)
       )
     );

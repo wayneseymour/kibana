@@ -13,7 +13,6 @@ import {
   addIndexNameForBulkIngest,
   streamOutFileNameFn,
 } from './straight_pipe_utils';
-import { straightPipeIngestList } from './straight_pipe_ingest';
 
 const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
 
@@ -26,50 +25,31 @@ export const straightPipeAll =
     // against serverless.
     prependStreamOut(streamOutFileNameFn);
 
+    // const annotatedMappingsAndDataFileObjects: Annotated[] = (await archiveEntries(pathToArchiveDirectory))
+    //   .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory));
+
     (await archiveEntries(pathToArchiveDirectory))
       .map(resolveAndAnnotateForDecompression(pathToArchiveDirectory))
-      .forEach((x: Annotated) => {
-        const { entryAbsPath, needsDecompression } = x;
-
-        /*
-         Pipelining the read stream that's prioritized to have the mappings json || data file (zipped or not),
-         into a maybe-decompress stream,
-         then, into a create the index or data stream, stream :) lol
-         */
-        const foldedStreams = (_) =>
-          pipelineAll(needsDecompression)(entryAbsPath)(indexOrDataStreamCreationArgs).on(
-            'done',
-            _
-          );
-
-        const { client } = indexOrDataStreamCreationArgs;
-
-        fromEventPattern(foldedStreams)
-          .pipe(bufferCount(BUFFER_SIZE))
-          .subscribe((as) => {
-            const updated = addIndexNameForBulkIngest(client)(log)(as);
-            console.log(`\nλjs updated: \n${JSON.stringify(updated, null, 2)}`);
-          });
-        // .subscribe((xs: BufferedJsonRecordsCollection) =>
-        //   pipe(xs, addIndexNameForBulkIngest(client)(log), (as) => {
-        //     console.log(`\nλjs as: \n${JSON.stringify(as, null, 2)}`)
-        //   })
-        // );
-      });
+      .forEach(f(log)(indexOrDataStreamCreationArgs));
   };
 
-// const ingest = (indexOrDataStreamCreationArgs) => async (record: any) => {
-//   // console.log(`\nλjs docs: \n${JSON.stringify(docs, null, 2)}`);
-//
-//   const { client, stats, skipExisting, docsOnly, log, useCreate } =
-//     indexOrDataStreamCreationArgs[0];
-//   const readable = Stream.Readable.from(record);
-//   readable.on('data', (chunk) => {
-//     console.log(chunk); // will be called once with `"input string"`
-//   });
-//   // const body = [{ index: { _index: 'date-nested' } }, record];
-//   // console.log(`\nλjs body: \n${JSON.stringify(body, null, 2)}`);
-//   // const bulkResponse = await client.bulk({ refresh: true, body });
-//   // console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
-// };
-//
+const f = (log: ToolingLog) => (destOpts) => (x: Annotated) => {
+  const { entryAbsPath, needsDecompression } = x;
+
+  /*
+   Pipelining the read stream that's prioritized to have the mappings json || data file (zipped or not),
+   into a maybe-decompress stream,
+   then, into a create the index or data stream, stream :) lol
+   */
+  const foldedStreams = (_) =>
+    pipelineAll(needsDecompression)(entryAbsPath)(destOpts).on('done', _);
+
+  const { client } = destOpts;
+
+  fromEventPattern(foldedStreams)
+    .pipe(bufferCount(BUFFER_SIZE))
+    .subscribe((as) => {
+      const updated = addIndexNameForBulkIngest(client)(log)(as);
+      console.log(`\nλjs updated: \n${JSON.stringify(updated, null, 2)}`);
+    });
+};
