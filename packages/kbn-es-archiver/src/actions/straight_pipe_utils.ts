@@ -74,9 +74,7 @@ export const prokSingleRecordAfterPipelining = (singleJsonRecord) => {
   //
   // i++;
 
-  // handleStreamToFileWithLimit(streamOutF)(0)(singleJsonRecord)
-
-  // handleStreamToFileWithLimitAndContinue(streamOutF)(0)(singleJsonRecord)
+  // handleStreamToFileWithLimitAndContinue(streamOutFileNameFn)(0)(singleJsonRecord);
 };
 export type Void2String = () => string;
 const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
@@ -151,7 +149,6 @@ export const streamOutFileNameFn: Void2String = () => 'stream_out.txt';
 
 export type BufferedJsonRecordsCollection = any[];
 export const addIndexNameForBulkIngest =
-  // (streamOutF: typeof streamOutFileNameFn) =>
   (client: Client) => (log: ToolingLog) => (xs: BufferedJsonRecordsCollection) => {
     const res = xs.flatMap((doc) => [{ index: { _index: recordsIndexName(xs[0]) } }, doc]);
     return res;

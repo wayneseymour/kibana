@@ -38,6 +38,7 @@ export async function loadAction({
   const relativeArchivePath = relFromRoot(inputDir);
 
   const stats = createStats(relativeArchivePath, log);
+
   await straightPipeAll(relativeArchivePath)(log)({
     client,
     stats,
@@ -46,9 +47,6 @@ export async function loadAction({
     log,
     useCreate,
   });
-  /*
-   The two expressions above could be a promise.all or TaskEither.sequence!
-   */
 
   const result = stats.toJSON();
 

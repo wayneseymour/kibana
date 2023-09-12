@@ -8,30 +8,21 @@
 
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
-import { Client, HttpConnection } from '@elastic/elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 import { ToolingLog } from '@kbn/tooling-log';
-import { ES_CLIENT_HEADERS } from '../client_headers';
 import { BufferedJsonRecordsCollection } from './straight_pipe_utils';
 
 export const straightPipeIngestList =
   (client: Client) => (log: ToolingLog) => async (body: BufferedJsonRecordsCollection) => {
-    await bulkIngest();
+    await straightPipeBulkIngest();
 
-    async function bulkIngest() {
-      // log.verbose(`\n${ccMark} Ingesting ${xs.length} docs at a time`);
-      //
-      const myClient = new Client({
-        node: process.env.ES_HOST || 'http://localhost:9200',
-        maxRetries: 5,
-        requestTimeout: 60000,
-        Connection: HttpConnection,
-        headers: ES_CLIENT_HEADERS,
-      });
-      const bulkResponse = await myClient.bulk({ refresh: true, body });
+    async function straightPipeBulkIngest() {
+      const bulkResponse = await client.bulk({ refresh: true, body });
+
       // {
       //   headers: ES_CLIENT_HEADERS,
       // });
-      console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
+      // console.log(`\nλjs bulkResponse: \n${JSON.stringify(bulkResponse, null, 2)}`);
       //
       // handleErrors(body, bulkResponse)(log);
     }
