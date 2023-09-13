@@ -6,41 +6,263 @@
 import { bufferCount, fromEventPattern } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ToolingLog } from '@kbn/tooling-log';
-import { straightPipeIngestList } from './straight_pipe_ingest';
+import {
+  MAIN_SAVED_OBJECT_INDEX,
+  TASK_MANAGER_SAVED_OBJECT_INDEX,
+} from '@kbn/core-saved-objects-server';
+import { IndicesPutIndexTemplateRequest } from '@elastic/elasticsearch/lib/api/types';
+import * as estypes from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
+import { inspect } from 'util';
+import { ES_CLIENT_HEADERS } from '../client_headers';
+import { deleteDataStream } from '../lib/indices/delete_data_stream';
+import { cleanSavedObjectIndices, deleteSavedObjectIndices } from '../lib';
+import { deleteIndex } from '../lib/indices/delete_index';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
   prependStreamOut,
-  pipelineAll,
   archiveEntries,
   addIndexNameForBulkIngest,
   streamOutFileNameFn,
+  readFSAndMaybeDecompress,
 } from './straight_pipe_utils';
 
 const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
+
+type String2Annotated = (a: string) => Promise<Annotated[]>;
+
+const annotatedAsync: String2Annotated = async (pathToArchiveDirectory: string) =>
+  (await archiveEntries(pathToArchiveDirectory)).map(
+    resolveAndAnnotateForDecompression(pathToArchiveDirectory)
+  );
 
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) => (log: ToolingLog) => async (destOpts) => {
     prependStreamOut(streamOutFileNameFn);
 
-    const annotatedMappingsAndDataFileObjects: Annotated[] = (
-      await archiveEntries(pathToArchiveDirectory)
-    ).map(resolveAndAnnotateForDecompression(pathToArchiveDirectory));
-
     const { client } = destOpts;
-    for (const annotated of annotatedMappingsAndDataFileObjects)
+
+    for await (const annotated of annotatedAsync(pathToArchiveDirectory))
       foldAndLiftBuffered(log)(destOpts)(annotated)
-        .pipe(map(addIndexNameForBulkIngest(client)(log)))
-        .subscribe(straightPipeIngestList(client)(log));
+        .pipe(
+          map(addIndexNameForBulkIngest(log)),
+          map((x) => {
+            console.log(`\nλjs x: \n${JSON.stringify(x, null, 2)}`);
+          })
+        )
+        // .subscribe(straightPipeIngestList(client)(log));
+        .subscribe((x) => {
+          console.log('\nλjs x to ingest');
+        });
   };
 
-/*
- Pipelining the read stream that's prioritized to have the mappings json || data file (zipped or not),
- into a maybe-decompress stream,
- then, into a create the index or data stream, stream :) lol
- */
 const foldAndLiftBuffered = (log: ToolingLog) => (destOpts) => (x: Annotated) => {
   const { entryAbsPath, needsDecompression } = x;
-  const foldedStreams = (_) =>
-    pipelineAll(needsDecompression)(entryAbsPath)(destOpts).on('done', _);
-  return fromEventPattern(foldedStreams).pipe(bufferCount(BUFFER_SIZE));
+
+  const execReadFSAndMaybeDecompress = (_) =>
+    readFSAndMaybeDecompress(needsDecompression)(entryAbsPath)(destOpts).on('done', _);
+  // pipelineAll(needsDecompression)(entryAbsPath)(destOpts).on('done', _);
+
+  return fromEventPattern(execReadFSAndMaybeDecompress).pipe(bufferCount(BUFFER_SIZE));
+};
+
+const spike = ({ client, stats, skipExisting = false, docsOnly = false, log }) => {
+  const skipDocsFromIndices = new Set();
+
+  // If we're trying to import Kibana index docs, we need to ensure that
+  // previous indices are removed so we're starting w/ a clean slate for
+  // migrations. This only needs to be done once per archive load operation.
+  let kibanaIndicesAlreadyDeleted = false;
+  let kibanaTaskManagerIndexAlreadyDeleted = false;
+
+  // if we detect saved object documents defined in the data.json, we will cleanup their indices
+  let kibanaIndicesAlreadyCleaned = false;
+  let kibanaTaskManagerIndexAlreadyCleaned = false;
+
+  async function handleDoc(record) {
+    const index = record.value.index;
+
+    if (skipDocsFromIndices.has(index)) {
+      return;
+    }
+
+    if (!skipExisting) {
+      if (index?.startsWith(TASK_MANAGER_SAVED_OBJECT_INDEX)) {
+        if (!kibanaTaskManagerIndexAlreadyDeleted && !kibanaTaskManagerIndexAlreadyCleaned) {
+          await cleanSavedObjectIndices({ client, stats, log, index });
+          kibanaTaskManagerIndexAlreadyCleaned = true;
+          log.debug(`Cleaned saved object index [${index}]`);
+        }
+      } else if (index?.startsWith(MAIN_SAVED_OBJECT_INDEX)) {
+        if (!kibanaIndicesAlreadyDeleted && !kibanaIndicesAlreadyCleaned) {
+          await cleanSavedObjectIndices({ client, stats, log });
+          kibanaIndicesAlreadyCleaned = kibanaTaskManagerIndexAlreadyCleaned = true;
+          log.debug(`Cleaned all saved object indices`);
+        }
+      }
+    }
+  }
+
+  async function handleDataStream(record, attempts = 1) {
+    if (docsOnly) return;
+
+    const { data_stream: dataStream, template } = record.value as {
+      data_stream: string;
+      template: IndicesPutIndexTemplateRequest;
+    };
+
+    try {
+      await client.indices.putIndexTemplate(template, {
+        headers: ES_CLIENT_HEADERS,
+      });
+
+      await client.indices.createDataStream(
+        { name: dataStream },
+        {
+          headers: ES_CLIENT_HEADERS,
+        }
+      );
+      stats.createdDataStream(dataStream, template.name, { template });
+    } catch (err) {
+      if (err?.meta?.body?.error?.type !== 'resource_already_exists_exception' || attempts >= 3) {
+        throw err;
+      }
+
+      if (skipExisting) {
+        skipDocsFromIndices.add(dataStream);
+        stats.skippedIndex(dataStream);
+        return;
+      }
+
+      await deleteDataStream(client, dataStream, template.name);
+      stats.deletedDataStream(dataStream, template.name);
+      await handleDataStream(record, attempts + 1);
+    }
+  }
+
+  async function handleIndex(record) {
+    const { index, settings, mappings, aliases } = record.value;
+    const isKibanaTaskManager = index.startsWith(TASK_MANAGER_SAVED_OBJECT_INDEX);
+    const isKibana = index.startsWith(MAIN_SAVED_OBJECT_INDEX) && !isKibanaTaskManager;
+
+    if (docsOnly) {
+      return;
+    }
+
+    async function attemptToCreate(attemptNumber = 1) {
+      try {
+        if (isKibana && !kibanaIndicesAlreadyDeleted) {
+          await deleteSavedObjectIndices({ client, stats, log }); // delete all .kibana* indices
+          kibanaIndicesAlreadyDeleted = kibanaTaskManagerIndexAlreadyDeleted = true;
+          log.debug(`Deleted all saved object indices`);
+        } else if (isKibanaTaskManager && !kibanaTaskManagerIndexAlreadyDeleted) {
+          await deleteSavedObjectIndices({ client, stats, onlyTaskManager: true, log }); // delete only .kibana_task_manager* indices
+          kibanaTaskManagerIndexAlreadyDeleted = true;
+          log.debug(`Deleted saved object index [${index}]`);
+        }
+
+        // create the index without the aliases
+        await client.indices.create(
+          {
+            index,
+            body: {
+              settings,
+              mappings,
+            },
+          },
+          {
+            headers: ES_CLIENT_HEADERS,
+          }
+        );
+
+        // create the aliases on a separate step (see https://github.com/elastic/kibana/issues/158918)
+        const actions: estypes.IndicesUpdateAliasesAction[] = Object.keys(aliases ?? {}).map(
+          (alias) => ({
+            add: {
+              index,
+              alias,
+              ...aliases![alias],
+            },
+          })
+        );
+
+        if (actions.length) {
+          await client.indices.updateAliases({ body: { actions } });
+        }
+
+        stats.createdIndex(index, { settings });
+      } catch (err) {
+        if (
+          err?.body?.error?.reason?.includes('index exists with the same name as the alias') &&
+          attemptNumber < 3
+        ) {
+          kibanaTaskManagerIndexAlreadyDeleted = false;
+          if (isKibana) {
+            kibanaIndicesAlreadyDeleted = false;
+          }
+
+          const aliasStr = inspect(aliases);
+          log.info(
+            `failed to create aliases [${aliasStr}] because ES indicated an index/alias already exists, trying again`
+          );
+          await attemptToCreate(attemptNumber + 1);
+          return;
+        }
+
+        if (
+          err?.meta?.body?.error?.type !== 'resource_already_exists_exception' ||
+          attemptNumber >= 3
+        ) {
+          throw err;
+        }
+
+        if (skipExisting) {
+          skipDocsFromIndices.add(index);
+          stats.skippedIndex(index);
+          return;
+        }
+
+        await deleteIndex({ client, stats, index, log });
+        await attemptToCreate(attemptNumber + 1);
+        return;
+      }
+    }
+
+    await attemptToCreate();
+  }
+
+  return async (record) => {
+    try {
+      switch (record && record.type) {
+        case 'index':
+          console.log('\nλjs creating index');
+          // process.exit(666); // Trez Exit Expression
+          await handleIndex(record);
+          break;
+
+        case 'data_stream':
+          console.log('\nλjs creating data stream');
+          // process.exit(666); // Trez Exit Expression
+          //
+          await handleDataStream(record);
+          break;
+
+        case 'doc':
+          console.log('\nλjs handling a doc?');
+          // process.exit(666); // Trez Exit Expression
+          //
+          await handleDoc(record);
+          break;
+
+        default: // Trez Exit Expression
+          console.log('\nλjs default case?');
+
+          //
+          // this.push(record);
+          break;
+      }
+    } catch (err) {
+      console.log('\nλjs exiting dude');
+      process.exit(666);
+    }
+  };
 };

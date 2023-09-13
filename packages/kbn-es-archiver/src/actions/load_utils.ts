@@ -13,19 +13,13 @@ import type { Client } from '@elastic/elasticsearch';
 import { Readable } from 'stream';
 import { pipe } from 'fp-ts/function';
 import fs, { createReadStream } from 'fs';
-import { REPO_ROOT } from '@kbn/repo-info';
 import * as zlib from 'zlib';
 import oboe from 'oboe';
 import { pipeline, PassThrough } from 'node:stream';
-import { relative, resolve } from 'path';
-import { fromEventPattern } from 'rxjs';
+import { resolve } from 'path';
 import { concatStreamProviders } from '@kbn/utils';
 import { ES_CLIENT_HEADERS } from '../client_headers';
-import {
-  createCreateIndexStream as originalMakeIndexOrDataStreamStream,
-  createParseArchiveStreams,
-  isGzip,
-} from '../lib';
+import { createParseArchiveStreams, isGzip } from '../lib';
 
 export interface Annotated {
   entryAbsPath: string;
@@ -76,36 +70,19 @@ const reportStreamPassOrFail = (err?: Error) => (archiveRelativePath: PathLikeOr
 };
 
 export const handlePipelinedStreams = (entryAbsPath: PathLikeOrString) => (err: Error) => {
-  pipe(
-    entryAbsPath,
-    relative.bind(null, REPO_ROOT),
-    err ? reportStreamPassOrFail(err) : reportStreamPassOrFail()
-  );
+  // pipe(
+  //   entryAbsPath,
+  //   relative.bind(null, REPO_ROOT),
+  //   err ? reportStreamPassOrFail(err) : reportStreamPassOrFail()
+  // );
 };
 
 export const passThroughOrDecompress = (needsDecompression: boolean) =>
   needsDecompression ? zlib.createGunzip() : new PassThrough();
 
-const readAndMaybeUnzipUsingSaxParserThenMakeIndexOrDataStream$ =
-  (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (indexingArgs) => {
-    return oboe(
-      pipeline(
-        fs.createReadStream(entryAbsPath),
-        passThroughOrDecompress(needsDecompression),
-        originalMakeIndexOrDataStreamStream(indexingArgs),
-        handlePipelinedStreams(entryAbsPath)
-      )
-    );
-  };
-
 export const saxParserJsonStanza$ =
   (entryAbsPath: PathLikeOrString) => (needsDecompression: boolean) => (handler: () => any) =>
     readAndMaybeUnzipUsingSaxParser$(needsDecompression)(entryAbsPath).on('done', handler);
-
-// export type Annotated_2_ObservableSubscription = (a: Annotated) => Observable<string>
-// export const jsonStanza$Subscription: Annotated_2_ObservableSubscription = ({
-export const jsonStanza$Subscription = ({ entryAbsPath, needsDecompression }: Annotated) =>
-  pipe(saxParserJsonStanza$(entryAbsPath)(needsDecompression), fromEventPattern);
 
 // TODO-TRE: Fix type info
 export const subscribe = (subscriptionF) => (obj: Annotated) => {

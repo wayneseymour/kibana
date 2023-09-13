@@ -8,7 +8,7 @@
 
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
-import oboe from 'oboe';
+import oboe, { Oboe } from 'oboe';
 import { pipeline } from 'node:stream';
 import fs, { writeFileSync } from 'fs';
 import * as TE from 'fp-ts/TaskEither';
@@ -26,7 +26,6 @@ import {
   PathLikeOrString,
   PredicateFn,
 } from './load_utils';
-import { createCreateIndexStream as originalMakeIndexOrDataStreamStream } from '../lib';
 
 const doesNotStartWithADot: PredicateFn = (x) => !x.startsWith('.');
 const readDirectory = (predicate: PredicateFn) => {
@@ -51,17 +50,31 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
 
-export const pipelineAll =
-  (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (destOpts) => {
-    return oboe(
+// export const pipelineAll =
+//   (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (destOpts) => {
+//     return oboe(
+//       pipeline(
+//         fs.createReadStream(entryAbsPath),
+//         passThroughOrDecompress(needsDecompression),
+//         // originalMakeIndexOrDataStreamStream(destOpts),
+//         handlePipelinedStreams(entryAbsPath)
+//       )
+//     );
+//   };
+
+export const readFSAndMaybeDecompress =
+  (needsDecompression: boolean) =>
+  (entryAbsPath: PathLikeOrString) =>
+  (destOpts): Oboe =>
+    oboe(
       pipeline(
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
-        originalMakeIndexOrDataStreamStream(destOpts),
+        // originalMakeIndexOrDataStreamStream(destOpts),
         handlePipelinedStreams(entryAbsPath)
       )
     );
-  };
+
 export const prokSingleRecordAfterPipelining = (singleJsonRecord) => {
   const _index = recordsIndexName(singleJsonRecord);
   console.log(`\nλjs _index: \n\t${_index}`);
@@ -149,7 +162,7 @@ export const streamOutFileNameFn: Void2String = () => 'stream_out.txt';
 
 export type BufferedJsonRecordsCollection = any[];
 export const addIndexNameForBulkIngest =
-  (client: Client) => (log: ToolingLog) => (xs: BufferedJsonRecordsCollection) => {
+  (log: ToolingLog) => (xs: BufferedJsonRecordsCollection) => {
     const res = xs.flatMap((doc) => [{ index: { _index: recordsIndexName(xs[0]) } }, doc]);
     return res;
   };

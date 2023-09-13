@@ -17,7 +17,11 @@ export const straightPipeIngestList =
     await straightPipeBulkIngest();
 
     async function straightPipeBulkIngest() {
-      const bulkResponse = await client.bulk({ refresh: true, body });
+      console.log('\nλjs ingesting');
+      console.log(`\nλjs body.length: \n\t${body.length}`);
+      console.log(`\nλjs body[0]: \n${JSON.stringify(body[0], null, 2)}`);
+
+      // const bulkResponse = await client.bulk({ refresh: true, body });
 
       // {
       //   headers: ES_CLIENT_HEADERS,
