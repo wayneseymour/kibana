@@ -26,7 +26,6 @@ import {
   PathLikeOrString,
   PredicateFn,
 } from './load_utils';
-import { createCreateIndexStream as originalMakeIndexOrDataStreamStream } from '../lib';
 
 const doesNotStartWithADot: PredicateFn = (x) => !x.startsWith('.');
 const readDirectory = (predicate: PredicateFn) => {
@@ -51,13 +50,14 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
     TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
   )();
 
+const noop = () => {};
 export const pipelineAll =
   (needsDecompression: boolean) => (entryAbsPath: PathLikeOrString) => (destOpts) => {
     return oboe(
       pipeline(
         fs.createReadStream(entryAbsPath),
         passThroughOrDecompress(needsDecompression),
-        originalMakeIndexOrDataStreamStream(destOpts),
+        // originalMakeIndexOrDataStreamStream(destOpts),
         handlePipelinedStreams(entryAbsPath)
       )
     );

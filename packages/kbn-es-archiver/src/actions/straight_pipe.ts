@@ -3,21 +3,33 @@
 
 /* eslint no-console: ["error",{ allow: ["log", "warn"] }] */
 
-import { bufferCount, fromEventPattern } from 'rxjs';
+import { fromEventPattern } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ToolingLog } from '@kbn/tooling-log';
-import { straightPipeIngestList } from './straight_pipe_ingest';
+import { Readable } from 'stream';
+import { pipeline } from 'node:stream';
 import { PathLikeOrString, resolveAndAnnotateForDecompression, Annotated } from './load_utils';
 import {
   prependStreamOut,
   pipelineAll,
   archiveEntries,
-  addIndexNameForBulkIngest,
   streamOutFileNameFn,
 } from './straight_pipe_utils';
+import { createCreateIndexStream } from '../lib';
 
 const BUFFER_SIZE = process.env.BUFFER_SIZE || 100;
 
+const createIndex$ = (destOpts) => (x) => {
+  const s = new Readable({ objectMode: true });
+  s.push(x);
+  s.push(null);
+
+  pipeline(s, createCreateIndexStream(destOpts), (err) => {
+    if (err) console.error(`\nλjs err: \n${JSON.stringify(err, null, 2)}`);
+  });
+
+  return x;
+};
 export const straightPipeAll =
   (pathToArchiveDirectory: PathLikeOrString) => (log: ToolingLog) => async (destOpts) => {
     prependStreamOut(streamOutFileNameFn);
@@ -26,21 +38,26 @@ export const straightPipeAll =
       await archiveEntries(pathToArchiveDirectory)
     ).map(resolveAndAnnotateForDecompression(pathToArchiveDirectory));
 
-    const { client } = destOpts;
     for (const annotated of annotatedMappingsAndDataFileObjects)
-      foldAndLiftBuffered(log)(destOpts)(annotated)
-        .pipe(map(addIndexNameForBulkIngest(client)(log)))
-        .subscribe(straightPipeIngestList(client)(log));
+      foldAndLift(log)(destOpts)(annotated)
+        .pipe(map(createIndex$(destOpts)))
+        .subscribe({
+          // next: (x) => console.log('\nλjs next, x:', x),
+          next: (x) => console.log('_'),
+          error: (err) => console.log('error:', err),
+          complete: () => console.log('the end'),
+        });
   };
 
-/*
- Pipelining the read stream that's prioritized to have the mappings json || data file (zipped or not),
- into a maybe-decompress stream,
- then, into a create the index or data stream, stream :) lol
- */
-const foldAndLiftBuffered = (log: ToolingLog) => (destOpts) => (x: Annotated) => {
+const foldAndLift = (log: ToolingLog) => (destOpts) => (x: Annotated) => {
   const { entryAbsPath, needsDecompression } = x;
   const foldedStreams = (_) =>
     pipelineAll(needsDecompression)(entryAbsPath)(destOpts).on('done', _);
-  return fromEventPattern(foldedStreams).pipe(bufferCount(BUFFER_SIZE));
+  return fromEventPattern(foldedStreams);
 };
+
+// foldAndLift(log)(destOpts)(annotated)
+//   // .pipe(bufferCount(BUFFER_SIZE))
+//   // .pipe(map(addIndexNameForBulkIngest(client)(log)))
+//   // .subscribe(straightPipeIngestList(client)(log));
+//   .subscribe(createIndex$(destOpts));
