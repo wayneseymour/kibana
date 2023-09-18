@@ -48,7 +48,7 @@ export const archiveEntries = async (archivePath: PathLikeOrString) =>
       async () => await mappingsAndArchiveFileNames(archivePath),
       (reason: any) => toError(reason)
     ),
-    TE.getOrElse(handleErrToFile(errFilePath)(archivePath))
+    TE.getOrElse(handleErrToFile(errFilePathF)(archivePath))
   )();
 
 export const pipelineAll =
@@ -81,7 +81,7 @@ const FILE_OUT_RECORD_LIMIT = process.env.FILE_OUT_RECORD_LIMIT ?? 3;
 const fileOutRecordLimitNotReached = (counterLowerBound: number): boolean =>
   counterLowerBound < FILE_OUT_RECORD_LIMIT;
 
-export const errFilePath: Void2String = () =>
+export const errFilePathF: Void2String = () =>
   resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
 
 const encoding = 'utf8';
@@ -90,6 +90,18 @@ const luxonNow = (): DateTime => DateTime.fromISO(DateTime.now().toString());
 export const prependStreamOut = (filePathF: () => string): void => {
   const writeToFile = writeFileSync.bind(null, filePathF());
   writeToFile(`λjs Stream Out @ ${luxonNow()}\n---\n\n`, { encoding });
+};
+
+export const prependStreamOutJsonArchive = (filePathF: () => string): void => {
+  const writeToFile = writeFileSync.bind(null, filePathF());
+  writeToFile('[\n');
+};
+export const postFixMutateLast = (x) => {
+
+}
+export const postFixStreamOutJsonArchive = (filePathF: () => string): void => {
+  const writeToFile = writeFileSync.bind(null, filePathF());
+  writeToFile('\n]');
 };
 
 export const appendToFile = (filePathF: Void2String) => (msg: string) =>
@@ -117,18 +129,19 @@ export const handleStreamToFileWithLimitAndContinue =
     return record;
   };
 
-const handleErrToFile = (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
-  const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
+export const handleErrToFile =
+  (filePathF: () => string) => (archivePath: string) => (reason: Error) => {
+    const failedMsg = `${JSON.stringify({ ...reason, archiveThatFailed: archivePath }, null, 2)}`;
 
-  try {
-    throw new Error(`${reason}`);
-  } catch (err) {
-    console.warn(failedMsg);
-    appendToFile(filePathF)(failedMsg);
-  }
+    try {
+      throw new Error(`${reason}`);
+    } catch (err) {
+      console.warn(failedMsg);
+      appendToFile(filePathF)(failedMsg);
+    }
 
-  return toError(reason);
-};
+    return toError(reason);
+  };
 
 enum BulkOperation {
   Create = 'create',
