@@ -7,19 +7,28 @@
  */
 
 import { resolve, relative, dirname } from 'path';
-import { createReadStream, createWriteStream } from 'fs';
-import { Readable } from 'stream';
+import {createReadStream, createWriteStream, writeFileSync} from 'fs';
+import {Readable, Transform} from 'stream';
 import { ToolingLog } from '@kbn/tooling-log';
 import { REPO_ROOT } from '@kbn/repo-info';
 import type { KbnClient } from '@kbn/test';
 import type { Client } from '@elastic/elasticsearch';
-import { createPromiseFromStreams } from '@kbn/utils';
+import {
+  createFilterStream,
+  createMapStream,
+  createPromiseFromStreams,
+  createReplaceStream,
+  createSplitStream
+} from '@kbn/utils';
+import { pipeline } from 'node:stream/promises';
 
-import { constants, createGzip } from 'zlib';
+import {constants, createGunzip, createGzip} from 'zlib';
 import { isMappingFile } from '../lib/archives/filenames';
 import { prependStreamOutJsonArchive } from './straight_pipe_utils';
 import { isGzip, createStats, prioritizeMappings, readDirectory } from '../lib';
 import { mkDirAndIgnoreAllErrors } from '../../../../test/api_integration/apis/local_and_ess_is_es_archiver_slow/utils';
+import {PassThrough} from "node:stream";
+import {RECORD_SEPARATOR} from "@kbn/es-archiver/src/lib/archives/constants";
 
 // pipe a series of streams into each other so that data and errors
 // flow from the first stream to the last. Errors from the last stream
@@ -72,52 +81,50 @@ export async function loadAction({
 
     const tail = (x): string | undefined => re.exec(x)![1];
 
+    // pipe(makeDir, makeFile, prependJsonArrayParens)
     if (isDoc) {
       const dir = `${dirname(absolute)}`;
       newDirName = `${head}/functional/es_archives/${tail(dir)}`;
       newFileName = `${newDirName}/data.json`;
 
-      console.log(`\nλjs newDirName: \n\t${newDirName}`);
-      console.log(`\nλjs newFileName: \n\t${newFileName}`);
-
-      await mkDirAndIgnoreAllErrors(newDirName)(log);
+      await mkDirAndIgnoreAllErrors(log)(newDirName)
       prependStreamOutJsonArchive(() => newFileName);
     }
 
-    // await pipeline(
-    //   createReadStream(absolute),
-    //   needsDecompression ? createGunzip() : new PassThrough(),
-    //   createReplaceStream('\r\n', '\n'),
-    //   createSplitStream(RECORD_SEPARATOR),
-    //   createFilterStream<string>((l) => !!l.match(/[^\s]/)),
-    //   createMapStream<string>((json) => JSON.parse(json.trim())),
-    //   new Transform({
-    //     readableObjectMode: true,
-    //     writableObjectMode: true,
-    //
-    //     transform(chunk, encoding, callback) {
-    //       if (isDoc) {
-    //         const addJsonStanza = (chunk: any) => {
-    //
-    //           const writeToFile = writeFileSync.bind(null, newFileName);
-    //
-    //           const x = `${JSON.stringify(chunk, null, 2)}${lineEnd}`
-    //
-    //           const appendUtf8 = { flag: 'a', encoding };
-    //
-    //           writeToFile(x, appendUtf8);
-    //         }
-    //
-    //
-    //         addJsonStanza(chunk);
-    //       }
-    //       callback();
-    //     },
-    //
-    //   }),
-    // )
+    await pipeline(
+      createReadStream(absolute),
+      needsDecompression ? createGunzip() : new PassThrough(),
+      createReplaceStream('\r\n', '\n'),
+      createSplitStream(RECORD_SEPARATOR),
+      createFilterStream<string>((l) => !!l.match(/[^\s]/)),
+      createMapStream<string>((json) => JSON.parse(json.trim())),
+      new Transform({
+        readableObjectMode: true,
+        writableObjectMode: true,
 
-    needsDecompression ? await compress(newFileName)(`${newFileName}.gz`) : log.verbose('\nλjs Not compressing', newFileName);
+        transform(chunk, encoding, callback) {
+          if (isDoc) {
+            const addJsonStanza = (chunk: any) => {
+
+              const writeToFile = writeFileSync.bind(null, newFileName);
+
+              const x = `${JSON.stringify(chunk, null, 2)}${lineEnd}`
+
+              const appendUtf8 = { flag: 'a', encoding };
+
+              writeToFile(x, appendUtf8);
+            }
+
+
+            addJsonStanza(chunk);
+          }
+          callback();
+        },
+
+      }),
+    )
+
+    // needsDecompression ? await compress(newFileName)(`${newFileName}.gz`) : log.verbose('\nλjs Not compressing', newFileName);
   }
 
   // // a single stream that emits records from all archive files, in

@@ -45,7 +45,7 @@ import { markdownify } from './markdown';
 
 export const logPathAndFileName = (logDirectory: PathLike) =>
   `${logDirectory}/${process.env.LOG_FILE_NAME ?? 'es_archiver_load_times_log.txt'}`;
-export const mkDirAndIgnoreAllErrors = (dirPath: PathLike) => (log) => {
+export const mkDirAndIgnoreAllErrors = (log) =>(dirPath: PathLike) =>  {
   log.verbose(`\nλjs mkdir: ${dirPath}`);
   pipe(
     dirPath,
@@ -291,7 +291,7 @@ export async function printInfoAndInitOutputLogging(
   logLoops(loopCount);
   preLog();
 
-  await mkDirAndIgnoreAllErrors(logDirAbsolutePath)(log);
+  await mkDirAndIgnoreAllErrors(log)(logDirAbsolutePath);
   ioFlushBefore(logPathAndFileName(logDirAbsolutePath))(
     `λλλ Init ${isDryRun() ? 'Dry Run ' : ''}Logging @ ${lazyNow()}`
   );
@@ -327,8 +327,8 @@ export const unloadBenchmarkingArchives = (esArchiver: EsArchiver) => async (xs:
 };
 
 export const archives = [
-  // 'test/functional/fixtures/es_archiver/date_nested',
+  'test/functional/fixtures/es_archiver/date_nested',
   'x-pack/test/functional/es_archives/logstash_functional',
-  // 'test/functional/fixtures/es_archiver/many_fields',
-  // 'x-pack/test/functional/es_archives/ml/farequote',
+  'test/functional/fixtures/es_archiver/many_fields',
+  'x-pack/test/functional/es_archives/ml/farequote',
 ] as const;
