@@ -7,7 +7,7 @@
  */
 
 import {resolve, relative, dirname} from 'path';
-import {createReadStream, createWriteStream, mkdirSync, writeFileSync} from 'fs';
+import {createReadStream, createWriteStream, mkdirSync, writeFileSync, statSync } from 'fs';
 import {PassThrough, Readable, Transform} from 'stream';
 import {ToolingLog} from '@kbn/tooling-log';
 import {REPO_ROOT} from '@kbn/repo-info';
@@ -36,7 +36,6 @@ import {
   Progress,
   createDefaultSpace,
 } from '../lib';
-import fs from "fs";
 import {constants, createGunzip, createGzip} from "zlib";
 import {RECORD_SEPARATOR} from "@kbn/es-archiver/src/lib/archives/constants";
 import {isMappingFile} from "@kbn/es-archiver/src/lib/archives/filenames";
@@ -94,48 +93,56 @@ export async function loadAction({
     const needsDecompression = isGzip(fName);
 
 
+
+    const re = /es_archive[s|r]\/(.+$)/;
+
+    const tail = (x): string | undefined => re.exec(x)![1]
+
+
     if (isDoc) {
       const dir = `${dirname(absolute)}`
-      const originalTail = dir.split('es_archives/')[1]
-      newDirName = `${head}/functional/es_archives/${originalTail}`
+      newDirName = `${head}/functional/es_archives/${tail(dir)}`
       newFileName = `${newDirName}/data.json`;
+
+      console.log(`\nλjs newDirName: \n\t${newDirName}`);
+      console.log(`\nλjs newFileName: \n\t${newFileName}`);
 
       await mkDirAndIgnoreAllErrors(newDirName)
       prependStreamOutJsonArchive(() => newFileName)
     }
 
-    await pipeline(
-      createReadStream(absolute),
-      needsDecompression ? createGunzip() : new PassThrough(),
-      createReplaceStream('\r\n', '\n'),
-      createSplitStream(RECORD_SEPARATOR),
-      createFilterStream<string>((l) => !!l.match(/[^\s]/)),
-      createMapStream<string>((json) => JSON.parse(json.trim())),
-      new Transform({
-        readableObjectMode: true,
-        writableObjectMode: true,
-
-        transform(chunk, encoding, callback) {
-          if (isDoc) {
-            const addJsonStanza = (chunk: any) => {
-
-              const writeToFile = writeFileSync.bind(null, newFileName);
-
-              const x = `${JSON.stringify(chunk, null, 2)}${lineEnd}`
-
-              const appendUtf8 = { flag: 'a', encoding };
-
-              writeToFile(x, appendUtf8);
-            }
-
-
-            addJsonStanza(chunk);
-          }
-          callback();
-        },
-
-      }),
-    )
+    // await pipeline(
+    //   createReadStream(absolute),
+    //   needsDecompression ? createGunzip() : new PassThrough(),
+    //   createReplaceStream('\r\n', '\n'),
+    //   createSplitStream(RECORD_SEPARATOR),
+    //   createFilterStream<string>((l) => !!l.match(/[^\s]/)),
+    //   createMapStream<string>((json) => JSON.parse(json.trim())),
+    //   new Transform({
+    //     readableObjectMode: true,
+    //     writableObjectMode: true,
+    //
+    //     transform(chunk, encoding, callback) {
+    //       if (isDoc) {
+    //         const addJsonStanza = (chunk: any) => {
+    //
+    //           const writeToFile = writeFileSync.bind(null, newFileName);
+    //
+    //           const x = `${JSON.stringify(chunk, null, 2)}${lineEnd}`
+    //
+    //           const appendUtf8 = { flag: 'a', encoding };
+    //
+    //           writeToFile(x, appendUtf8);
+    //         }
+    //
+    //
+    //         addJsonStanza(chunk);
+    //       }
+    //       callback();
+    //     },
+    //
+    //   }),
+    // )
 
     // needsDecompression ? await compress(newFileName) : () => {}
   }
