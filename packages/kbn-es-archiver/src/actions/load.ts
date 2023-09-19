@@ -80,7 +80,7 @@ export async function loadAction({
       console.log(`\nλjs newDirName: \n\t${newDirName}`);
       console.log(`\nλjs newFileName: \n\t${newFileName}`);
 
-      await mkDirAndIgnoreAllErrors(newDirName);
+      await mkDirAndIgnoreAllErrors(newDirName)(log);
       prependStreamOutJsonArchive(() => newFileName);
     }
 
@@ -117,7 +117,7 @@ export async function loadAction({
     //   }),
     // )
 
-    needsDecompression ? await compress(newFileName)(`${newFileName}.gz`) : () => {};
+    needsDecompression ? await compress(newFileName)(`${newFileName}.gz`) : log.verbose('\nλjs Not compressing', newFileName);
   }
 
   // // a single stream that emits records from all archive files, in

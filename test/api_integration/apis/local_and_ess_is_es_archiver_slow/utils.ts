@@ -45,11 +45,13 @@ import { markdownify } from './markdown';
 
 export const logPathAndFileName = (logDirectory: PathLike) =>
   `${logDirectory}/${process.env.LOG_FILE_NAME ?? 'es_archiver_load_times_log.txt'}`;
-export const mkDirAndIgnoreAllErrors: PromiseEitherFn = (logDirPath: PathLike) =>
+export const mkDirAndIgnoreAllErrors = (dirPath: PathLike) => (log) => {
+  log.verbose(`\nλjs mkdir: ${dirPath}`);
   pipe(
-    logDirPath,
-    TE.tryCatch(async () => await fs.mkdir(logDirPath), pipe(toError))
+    dirPath,
+    TE.tryCatch(async () => await fs.mkdir(dirPath), pipe(toError))
   );
+}
 
 export const absolutePathForLogsDirectory: (rel: string) => PathLike = (rel: string): string =>
   resolve(REPO_ROOT, rel);
@@ -289,7 +291,7 @@ export async function printInfoAndInitOutputLogging(
   logLoops(loopCount);
   preLog();
 
-  await mkDirAndIgnoreAllErrors(logDirAbsolutePath);
+  await mkDirAndIgnoreAllErrors(logDirAbsolutePath)(log);
   ioFlushBefore(logPathAndFileName(logDirAbsolutePath))(
     `λλλ Init ${isDryRun() ? 'Dry Run ' : ''}Logging @ ${lazyNow()}`
   );
