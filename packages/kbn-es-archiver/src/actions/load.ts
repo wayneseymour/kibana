@@ -6,44 +6,20 @@
  * Side Public License, v 1.
  */
 
-import {resolve, relative, dirname} from 'path';
-import {createReadStream, createWriteStream, mkdirSync, writeFileSync, statSync } from 'fs';
-import {PassThrough, Readable, Transform} from 'stream';
-import {ToolingLog} from '@kbn/tooling-log';
-import {REPO_ROOT} from '@kbn/repo-info';
-import type {KbnClient} from '@kbn/test';
-import type {Client} from '@elastic/elasticsearch';
-import {
-  createPromiseFromStreams,
-  concatStreamProviders,
-  createReplaceStream,
-  createSplitStream,
-  createFilterStream, createMapStream
-} from '@kbn/utils';
-import {MAIN_SAVED_OBJECT_INDEX} from '@kbn/core-saved-objects-server';
-import {ES_CLIENT_HEADERS} from '../client_headers';
-import {pipeline} from 'node:stream/promises';
+import { resolve, relative, dirname } from 'path';
+import { createReadStream, createWriteStream } from 'fs';
+import { Readable } from 'stream';
+import { ToolingLog } from '@kbn/tooling-log';
+import { REPO_ROOT } from '@kbn/repo-info';
+import type { KbnClient } from '@kbn/test';
+import type { Client } from '@elastic/elasticsearch';
+import { createPromiseFromStreams } from '@kbn/utils';
 
-import {
-  isGzip,
-  createStats,
-  prioritizeMappings,
-  readDirectory,
-  createParseArchiveStreams,
-  createCreateIndexStream,
-  createIndexDocRecordsStream,
-  migrateSavedObjectIndices,
-  Progress,
-  createDefaultSpace,
-} from '../lib';
-import {constants, createGunzip, createGzip} from "zlib";
-import {RECORD_SEPARATOR} from "@kbn/es-archiver/src/lib/archives/constants";
-import {isMappingFile} from "@kbn/es-archiver/src/lib/archives/filenames";
-import {prependStreamOutJsonArchive} from "@kbn/es-archiver/src/actions/straight_pipe_utils";
-import {promisify} from "util";
-import {
-  mkDirAndIgnoreAllErrors
-} from "../../../../test/api_integration/apis/local_and_ess_is_es_archiver_slow/utils";
+import { constants, createGzip } from 'zlib';
+import { isMappingFile } from '../lib/archives/filenames';
+import { prependStreamOutJsonArchive } from './straight_pipe_utils';
+import { isGzip, createStats, prioritizeMappings, readDirectory } from '../lib';
+import { mkDirAndIgnoreAllErrors } from '../../../../test/api_integration/apis/local_and_ess_is_es_archiver_slow/utils';
 
 // pipe a series of streams into each other so that data and errors
 // flow from the first stream to the last. Errors from the last stream
@@ -53,21 +29,21 @@ const fold = (...streams: Readable[]) =>
     source.once('error', (error) => dest.destroy(error)).pipe(dest as any)
   );
 const compress = (a) => async (b) => {
-        await createPromiseFromStreams([
-        createReadStream(a),
-        createGzip({ level: constants.Z_BEST_COMPRESSION }),
-        createWriteStream(b),
-      ]);
-}
+  await createPromiseFromStreams([
+    createReadStream(a),
+    createGzip({ level: constants.Z_BEST_COMPRESSION }),
+    createWriteStream(b),
+  ]);
+};
 export async function loadAction({
-                                   inputDir,
-                                   skipExisting,
-                                   useCreate,
-                                   docsOnly,
-                                   client,
-                                   log,
-                                   kbnClient,
-                                 }: {
+  inputDir,
+  skipExisting,
+  useCreate,
+  docsOnly,
+  client,
+  log,
+  kbnClient,
+}: {
   inputDir: string;
   skipExisting: boolean;
   useCreate: boolean;
@@ -82,8 +58,8 @@ export async function loadAction({
   const kibanaPluginIds = await kbnClient.plugins.getEnabledIds();
   const lineEnd = ',\n';
 
-  const isDocNotMappingFile = (x) => isMappingFile(x) ? false : true;
-  const head = `${resolve(REPO_ROOT, 'x-pack/test_serverless')}`
+  const isDocNotMappingFile = (x) => (isMappingFile(x) ? false : true);
+  const head = `${resolve(REPO_ROOT, 'x-pack/test_serverless')}`;
 
   for await (const fName of files) {
     const absolute = resolve(inputDir, fName);
@@ -92,23 +68,20 @@ export async function loadAction({
     let newFileName = '';
     const needsDecompression = isGzip(fName);
 
-
-
     const re = /es_archive[s|r]\/(.+$)/;
 
-    const tail = (x): string | undefined => re.exec(x)![1]
-
+    const tail = (x): string | undefined => re.exec(x)![1];
 
     if (isDoc) {
-      const dir = `${dirname(absolute)}`
-      newDirName = `${head}/functional/es_archives/${tail(dir)}`
+      const dir = `${dirname(absolute)}`;
+      newDirName = `${head}/functional/es_archives/${tail(dir)}`;
       newFileName = `${newDirName}/data.json`;
 
       console.log(`\nλjs newDirName: \n\t${newDirName}`);
       console.log(`\nλjs newFileName: \n\t${newFileName}`);
 
-      await mkDirAndIgnoreAllErrors(newDirName)
-      prependStreamOutJsonArchive(() => newFileName)
+      await mkDirAndIgnoreAllErrors(newDirName);
+      prependStreamOutJsonArchive(() => newFileName);
     }
 
     // await pipeline(
@@ -144,9 +117,8 @@ export async function loadAction({
     //   }),
     // )
 
-    // needsDecompression ? await compress(newFileName) : () => {}
+    needsDecompression ? await compress(newFileName)(`${newFileName}.gz`) : () => {};
   }
-
 
   // // a single stream that emits records from all archive files, in
   // // order, so that createIndexStream can track the state of indexes

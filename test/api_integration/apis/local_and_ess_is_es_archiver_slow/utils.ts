@@ -325,8 +325,8 @@ export const unloadBenchmarkingArchives = (esArchiver: EsArchiver) => async (xs:
 };
 
 export const archives = [
-  'test/functional/fixtures/es_archiver/date_nested',
+  // 'test/functional/fixtures/es_archiver/date_nested',
   'x-pack/test/functional/es_archives/logstash_functional',
-  'test/functional/fixtures/es_archiver/many_fields',
-  'x-pack/test/functional/es_archives/ml/farequote',
+  // 'test/functional/fixtures/es_archiver/many_fields',
+  // 'x-pack/test/functional/es_archives/ml/farequote',
 ] as const;
