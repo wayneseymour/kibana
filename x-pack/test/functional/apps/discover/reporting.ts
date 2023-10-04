@@ -132,7 +132,8 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
         await textInput.clearValue();
       });
 
-      it('generates a report from a new search with data: default', async () => {
+      // Flaky https://github.com/elastic/kibana/issues/112164
+      it.skip('generates a report from a new search with data: default', async () => {
         await PageObjects.discover.clickNewSearchButton();
         await PageObjects.reporting.setTimepickerInEcommerceDataRange();
 
