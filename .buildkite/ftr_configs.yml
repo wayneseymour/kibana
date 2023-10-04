@@ -458,7 +458,6 @@ enabled:
   - x-pack/test/security_solution_api_integration/test_suites/detections_response/default_license/rule_creation/configs/serverless.config.ts
   - x-pack/test/security_solution_api_integration/test_suites/detections_response/default_license/rule_creation/configs/ess.config.ts
 
-
-
-
-
+  # ES Archiver Benchmarking, probably will not be in CI
+  - test/api_integration/apis/local_and_ess_is_es_archiver_slow/config.ts
+  - x-pack/test_serverless/api_integration/test_suites/serverless_is_es_archiver_slow/config.ts

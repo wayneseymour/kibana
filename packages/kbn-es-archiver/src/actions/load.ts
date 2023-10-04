@@ -17,6 +17,7 @@ import { createPromiseFromStreams, concatStreamProviders } from '@kbn/utils';
 import { MAIN_SAVED_OBJECT_INDEX } from '@kbn/core-saved-objects-server';
 import { ES_CLIENT_HEADERS } from '../client_headers';
 
+<<<<<<< HEAD
 import {
   isGzip,
   createStats,
@@ -49,6 +50,31 @@ We also recommend migrating existing tests to 'kbnArchiver' whenever possible. A
 ${resolve(__dirname, '../fixtures/override_saved_objects_index/exception_list.json')}.
 Find more information here: https://github.com/elastic/kibana/issues/161882`;
 };
+||||||| parent of ba4dae391a6 ([Es Archiver] Higher Water Mark for Load Action)
+import { ordered, readableFactory, complete } from './load_utils';
+import { createStats, createCreateIndexStream, indexDocRecordsWritable$ } from '../lib';
+=======
+import {
+  isGzip,
+  createStats,
+  prioritizeMappings,
+  readDirectory,
+  createParseArchiveStreams,
+  createCreateIndexStream,
+  createIndexDocRecordsStream,
+  migrateSavedObjectIndices,
+  Progress,
+  createDefaultSpace,
+} from '../lib';
+
+// pipe a series of streams into each other so that data and errors
+// flow from the first stream to the last. Errors from the last stream
+// are not listened for
+const pipeline = (...streams: Readable[]) =>
+  streams.reduce((source, dest) =>
+    source.once('error', (error) => dest.destroy(error)).pipe(dest as any)
+  );
+>>>>>>> ba4dae391a6 ([Es Archiver] Higher Water Mark for Load Action)
 
 export async function loadAction({
   inputDir,
@@ -95,6 +121,7 @@ export async function loadAction({
   progress.activate(log);
 
   await createPromiseFromStreams([
+<<<<<<< HEAD
     recordStream,
     createCreateIndexStream({
       client,
@@ -105,6 +132,18 @@ export async function loadAction({
       log,
     }),
     createIndexDocRecordsStream(client, stats, progress, useCreate),
+||||||| parent of ba4dae391a6 ([Es Archiver] Higher Water Mark for Load Action)
+    // a single stream that emits records from all archive files, in
+    // order, so that createIndexStream can track the state of indexes
+    // across archives and properly skip docs from existing indexes
+    concatStreamProviders((await ordered(inputDir)).map(readable$Fns), mode),
+    createCreateIndexStream({ client, stats, skipExisting, docsOnly, log }),
+    indexDocRecordsWritable$(client, stats, useCreate),
+=======
+    recordStream,
+    createCreateIndexStream({ client, stats, skipExisting, docsOnly, log }),
+    createIndexDocRecordsStream(client, stats, progress, useCreate),
+>>>>>>> ba4dae391a6 ([Es Archiver] Higher Water Mark for Load Action)
   ]);
 
   progress.deactivate();
