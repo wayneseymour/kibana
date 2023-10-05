@@ -41,7 +41,6 @@ import type {
 } from './shared.types';
 import { LoadResult } from './shared.types';
 import { computeAverageMinMax } from './calc';
-import { markdownify } from './markdown';
 
 export const logPathAndFileNameF = (logDirectory: PathLike) =>
   `${logDirectory}/${process.env.LOG_FILE_NAME ?? 'es_archiver_load_times_log.txt'}`;
@@ -245,13 +244,16 @@ const printEachJsonVerbose =
     return x;
   };
 
- const csvPathAndFileNameF = (logDirectory: PathLike) => (theEnv) =>
-  `${logDirectory}/${process.env.CSV_FILE_NAME ?? `${theEnv}_es_archiver_load_results.csv`}`;
+const csvPathAndFileNameF = (logDirectory: PathLike) => (theEnv: string) =>
+  `${logDirectory}/${theEnv}_es_archiver_load_results.csv`;
 
- const flushCsv = (logDirAbsolutePath) => (theEnv) => (result) => {
-   const { name, avg, min, max } = result;
-   ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${name},${avg},${min},${max}`)
- }
+const csvify = ({ name, avg, min, max }: FinalResult): string => `${name},${avg},${min},${max}`;
+
+const flushCsv = (logDirAbsolutePath: PathLike) => (theEnv: string) => (result: FinalResult) => {
+  const { name, avg, min, max } = result;
+  ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${name},${avg},${min},${max}`);
+  return result;
+};
 export const afterAll = (
   theEnv: RuntimeEnv,
   logDirAbsolutePath: PathLike,
@@ -264,11 +266,14 @@ export const afterAll = (
 
     const finalResults = (await computeAverageMinMax(results)) as FinalResult[];
 
-    ioFlushCreateLogAndWriteSimple(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${theEnv}\n`)
+    ioFlushCreateLogAndWriteSimple(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${theEnv}\n`);
 
     finalResults
       .map(printEachJsonVerbose(log))
+      .map(csvify)
+      // @ts-ignore
       .map(flushCsv(logDirAbsolutePath)(theEnv))
+      .forEach((x) => console.log(x));
 
     reportLogFile2Screen(logDirAbsolutePath as string)(logPathAndFileNameF);
   };
