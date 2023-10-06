@@ -272,8 +272,7 @@ const csvPathAndFileNameF = (logDirectory: PathLike) => (theEnv: string) =>
 const csvify = ({ name, avg, min, max }: FinalResult): string => `${name},${avg},${min},${max}`;
 
 const flushCsv = (logDirAbsolutePath: PathLike) => (theEnv: string) => (result: FinalResult) => {
-  const { name, avg, min, max } = result;
-  ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${name},${avg},${min},${max}`);
+  ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(result);
   return result;
 };
 export const afterAll = (
