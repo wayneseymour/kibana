@@ -41,9 +41,8 @@ import type {
 } from './shared.types';
 import { LoadResult } from './shared.types';
 import { computeAverageMinMax } from './calc';
-import { markdownify } from './markdown';
 
-export const logPathAndFileName = (logDirectory: PathLike) =>
+export const logPathAndFileNameF = (logDirectory: PathLike) =>
   `${logDirectory}/${process.env.LOG_FILE_NAME ?? 'es_archiver_load_times_log.txt'}`;
 export const mkDirAndIgnoreAllErrors: PromiseEitherFn = (logDirPath: PathLike) =>
   pipe(
@@ -58,13 +57,17 @@ const encoding = 'utf8';
 const appendUtf8 = { flag: 'a', encoding };
 const overwriteUtf8 = { flag: 'w', encoding };
 
-export const ioFlushBefore = (dest: string) => (x: any) => {
+export const ioFlushCreateLogAndWrite = (dest: string) => (x: any) => {
   const writeToFile = writeFileSync.bind(null, dest);
   // @ts-ignore
   writeToFile(`${JSON.stringify(x, null, 2)}\n`, overwriteUtf8);
 };
-
-export const ioFlushAfter = (dest: string) => (x: any) => {
+export const ioFlushCreateLogAndWriteSimple = (dest: string) => (x: any) => {
+  const writeToFile = writeFileSync.bind(null, dest);
+  // @ts-ignore
+  writeToFile(x, overwriteUtf8);
+};
+export const ioFlushAppendLog = (dest: string) => (x: any) => {
   const writeToFile = writeFileSync.bind(null, dest);
   // // @ts-ignore
   // writeToFile(`${JSON.stringify(x, null, 2)}\n`, appendUtf8);
@@ -108,6 +111,8 @@ export function metricsFactory(resultSet: LoadResults) {
     resultSet.add(found);
   };
 }
+
+export const errFilePath = () => resolve(REPO_ROOT, 'esarch_failed_load_action_archives.txt');
 export const compositionChain =
   (
     loadUnloadAndGetMetrics: (
@@ -131,7 +136,26 @@ export const compositionChain =
       return await pipe(
         TE.tryCatch(
           async (): Promise<ArchiveLoadMetrics> => await loadUnloadAndGetMetrics(i, archive),
-          (reason: any) => toError(reason)
+          (reason) => {
+            const { code, stack, message } = reason;
+
+            const caught = {
+              code,
+              stack,
+              message,
+              archiveThatFailed: archive,
+            };
+            const failedMsg = `${JSON.stringify(caught, null, 2)}`;
+
+            try {
+              throw new Error(`${reason}`);
+            } catch (err) {
+              console.log(failedMsg);
+              writeFileSync(errFilePath(), `${failedMsg},\n`, { flag: 'a', encoding: 'utf8' });
+            }
+
+            return toError(reason);
+          }
         ),
         TE.map((x: ArchiveLoadMetrics) => {
           push({
@@ -141,7 +165,7 @@ export const compositionChain =
           });
           return x;
         }),
-        TE.map(ioFlush(logPathAndFileName(logDirAbsolutePath)))
+        TE.map(ioFlush(logPathAndFileNameF(logDirAbsolutePath)))
       )();
     };
 const fake =
@@ -177,6 +201,7 @@ const work = async (
   log: ToolingLog
 ): Promise<{ bef: DateTime; aft: DateTime }> =>
   dryRun ? await fake()(log) : await real(esArchiver)(archive);
+
 export function loadAndTime(esArchiver: EsArchiver, dryRun: boolean = false, log: ToolingLog) {
   return async function getMetrics(
     loopIndex: number,
@@ -226,33 +251,52 @@ export const tap = (log: ToolingLog) => (environ: RuntimeEnv) => (x: string) => 
   environ === 'SERVERLESS' ? console.log(fx(x)) : log.info(fx(x));
   return x as unknown as FinalResult;
 };
+const reportLogFile2Screen = (logDirAbsolutePath: string) => (filePathF: any) =>
+  console.log(
+    chalk.bold.cyanBright.underline(
+      `\nλλλ Please see the log file: \n${pipe(logDirAbsolutePath, filePathF)}`
+    )
+  );
+const printEachJsonVerbose =
+  (log: ToolingLog) =>
+  (x: FinalResult): FinalResult => {
+    log.verbose(
+      chalk.bold.cyanBright.underline(`\nλλλ Avg, Min, and Max: \n${JSON.stringify(x, null, 2)}`)
+    );
+    return x;
+  };
+
+const csvPathAndFileNameF = (logDirectory: PathLike) => (theEnv: string) =>
+  `${logDirectory}/${theEnv}_es_archiver_load_results.csv`;
+
+const csvify = ({ name, avg, min, max }: FinalResult): string => `${name},${avg},${min},${max}`;
+
+const flushCsv = (logDirAbsolutePath: PathLike) => (theEnv: string) => (result: FinalResult) => {
+  ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(result);
+  return result;
+};
 export const afterAll = (
   theEnv: RuntimeEnv,
   logDirAbsolutePath: PathLike,
   results: LoadResults
 ) => {
-  const flushFinal = ioFlushAfter(logPathAndFileName(logDirAbsolutePath));
+  const flushFinalLog = ioFlushAppendLog(logPathAndFileNameF(logDirAbsolutePath));
 
   return async function finalMetricsAndLogging(log: ToolingLog): Promise<void> {
-    flushFinal(`λλλ FINAL METRICS @ ${lazyNow()}`);
-    const tapLog = tap(log)(theEnv);
-    // const tapLog = tap(log)('SERVERLESS');
-    ((await computeAverageMinMax(results)) as FinalResult[])
-      .map(function printEachJsonVerbose(x: FinalResult): FinalResult {
-        log.verbose(
-          chalk.bold.cyanBright.underline(
-            `\nλλλ Avg, Min, and Max: \n${JSON.stringify(x, null, 2)}`
-          )
-        );
-        return x;
-      })
-      .map((x: FinalResult) => pipe(markdownify(theEnv)(x), tapLog))
-      .forEach(flushFinal);
-    console.log(
-      chalk.bold.cyanBright.underline(
-        `\nλλλ Please see the log file: \n${pipe(logDirAbsolutePath, logPathAndFileName)}`
-      )
-    );
+    flushFinalLog(`λλλ FINAL METRICS @ ${lazyNow()}`);
+
+    const finalResults = (await computeAverageMinMax(results)) as FinalResult[];
+
+    ioFlushCreateLogAndWriteSimple(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(`${theEnv}\n`);
+
+    finalResults
+      .map(printEachJsonVerbose(log))
+      .map(csvify)
+      // @ts-ignore
+      .map(flushCsv(logDirAbsolutePath)(theEnv))
+      .forEach((x) => console.log(x));
+
+    reportLogFile2Screen(logDirAbsolutePath as string)(logPathAndFileNameF);
   };
 };
 const logLoops = (x: number): void => {
@@ -263,13 +307,14 @@ const logLoops = (x: number): void => {
   ];
   console.log(brightAndNoticeable.join(''));
 };
+export const cpuCount = () => os.cpus().length;
 export const hardware = () =>
   dedent`
     λ os.arch -> ${os.arch()}
     λ os.platform -> ${os.platform()}
     λ os.totalmem -> ${pipe(os.totalmem(), byteSize)}
     λ os.freemem -> ${pipe(os.freemem(), byteSize)}
-    λ CPU Count -> ${os.cpus().length}
+    λ CPU Count -> ${cpuCount()}
   `;
 
 const loud = (x: unknown): string => `${chalk.bold.cyanBright.underline(x)}`;
@@ -289,10 +334,10 @@ export async function printInfoAndInitOutputLogging(
   preLog();
 
   await mkDirAndIgnoreAllErrors(logDirAbsolutePath);
-  ioFlushBefore(logPathAndFileName(logDirAbsolutePath))(
+  ioFlushCreateLogAndWrite(logPathAndFileNameF(logDirAbsolutePath))(
     `λλλ Init ${isDryRun() ? 'Dry Run ' : ''}Logging @ ${lazyNow()}`
   );
-  ioFlushAfter(logPathAndFileName(logDirAbsolutePath))(hardware());
+  ioFlushAppendLog(logPathAndFileNameF(logDirAbsolutePath))(hardware());
 }
 export function testsLoop(
   esArchiver: EsArchiver,
@@ -315,9 +360,99 @@ export function testsLoop(
     });
   };
 }
+
 export const LOOP_LIMIT: number = (process.env.LOOP_LIMIT as unknown as number) ?? 50;
-export const archives = [
-  'x-pack/test/functional/es_archives/logstash_functional',
+
+const fixed = [
+  'test/functional/fixtures/es_archiver/dashboard/current/data',
+  'test/functional/fixtures/es_archiver/saved_objects_management/export_exclusion',
+  'test/functional/fixtures/es_archiver/saved_objects_management/export_transform',
+  'test/functional/fixtures/es_archiver/saved_objects_management/hidden_from_http_apis',
+  'test/functional/fixtures/es_archiver/saved_objects_management/hidden_saved_objects',
+  'test/functional/fixtures/es_archiver/saved_objects_management/hidden_types',
+  'test/functional/fixtures/es_archiver/saved_objects_management/nested_export_transform',
+  'test/functional/fixtures/es_archiver/saved_objects_management/visible_in_management',
+  'test/functional/fixtures/es_archiver/search/downsampled',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/apm_8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/apm_mappings_only_8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/infra_metrics_and_apm',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/metrics_8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/ml_8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/observability_overview',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/rum_8.0.0',
+  'x-pack/test/apm_api_integration/common/fixtures/es_archiver/rum_test_data',
+];
+const oss = [
+  'test/functional/fixtures/es_archiver/alias',
+  'test/functional/fixtures/es_archiver/date_nanos',
+  'test/functional/fixtures/es_archiver/date_nanos_custom',
+  'test/functional/fixtures/es_archiver/date_nanos_mixed',
+  'test/functional/fixtures/es_archiver/date_nested',
+  'test/functional/fixtures/es_archiver/deprecations_service',
+  'test/functional/fixtures/es_archiver/hamlet',
+  'test/functional/fixtures/es_archiver/huge_fields',
+  'test/functional/fixtures/es_archiver/index_pattern_without_timefield',
+  'test/functional/fixtures/es_archiver/kibana_sample_data_flights',
+  'test/functional/fixtures/es_archiver/kibana_sample_data_flights_index_pattern',
+  'test/functional/fixtures/es_archiver/kibana_sample_data_logs_tsdb',
+  'test/functional/fixtures/es_archiver/large_fields',
+  'test/functional/fixtures/es_archiver/logstash_functional',
+  'test/functional/fixtures/es_archiver/long_window_logstash',
+  'test/functional/fixtures/es_archiver/makelogs',
   'test/functional/fixtures/es_archiver/many_fields',
+  'test/functional/fixtures/es_archiver/message_with_newline',
+  'test/functional/fixtures/es_archiver/stress_test',
+  'test/functional/fixtures/es_archiver/unmapped_fields',
+];
+const recentlyFound = [
+  'x-pack/test/monitoring_api_integration/archives/apm/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/apm/package',
+  'x-pack/test/monitoring_api_integration/archives/beats/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/beats/package',
+  'x-pack/test/monitoring_api_integration/archives/elasticsearch/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/elasticsearch/package',
+  'x-pack/test/monitoring_api_integration/archives/enterprisesearch/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/enterprisesearch/package',
+  'x-pack/test/monitoring_api_integration/archives/kibana/single_node/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/kibana/single_node/package',
+  'x-pack/test/monitoring_api_integration/archives/logstash/single_node/metricbeat',
+  'x-pack/test/monitoring_api_integration/archives/logstash/single_node/package',
+];
+const xpack = [
+  'test/functional/fixtures/es_archiver/dashboard/current/data',
+  'test/functional/fixtures/es_archiver/getting_started/shakespeare',
+  'test/functional/fixtures/es_archiver/index_pattern_without_timefield',
+  'test/functional/fixtures/es_archiver/kibana_sample_data_flights',
+  'test/functional/fixtures/es_archiver/logstash_functional',
+  'x-pack/test/functional/es_archives/dashboard/async_search',
+  'x-pack/test/functional/es_archives/fleet/agents',
+  'x-pack/test/functional/es_archives/getting_started/shakespeare',
+  'x-pack/test/functional/es_archives/graph/secrepo',
+  'x-pack/test/functional/es_archives/lens/rollup/data',
+  'x-pack/test/functional/es_archives/logstash_functional',
+  'x-pack/test/functional/es_archives/ml/bm_classification',
+  'x-pack/test/functional/es_archives/ml/categorization_small',
+  'x-pack/test/functional/es_archives/ml/ecommerce',
+  'x-pack/test/functional/es_archives/ml/egs_regression',
+  'x-pack/test/functional/es_archives/ml/event_rate_nanos',
   'x-pack/test/functional/es_archives/ml/farequote',
-] as const;
+  'x-pack/test/functional/es_archives/ml/farequote_small',
+  'x-pack/test/functional/es_archives/ml/ihp_outlier',
+  'x-pack/test/functional/es_archives/ml/module_sample_ecommerce',
+  'x-pack/test/functional/es_archives/ml/module_sample_logs',
+  'x-pack/test/functional/es_archives/reporting/unmapped_fields',
+  'x-pack/test/functional/es_archives/security/dlstest',
+  'x-pack/test/functional/es_archives/uptime/blank',
+  'x-pack/test/functional/es_archives/visualize/default',
+  'x-pack/test/saved_object_tagging/common/fixtures/es_archiver/logstash_functional',
+  ...recentlyFound,
+];
+
+// const single = ['test/functional/fixtures/es_archiver/index_pattern_without_timefield'];
+export const archives = [
+  // ...single,
+  ...fixed,
+  ...oss,
+  ...xpack,
+];
