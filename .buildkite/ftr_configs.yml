@@ -475,6 +475,7 @@ enabled:
   - x-pack/test/security_solution_api_integration/test_suites/detections_response/default_license/prebuilt_rules/update_prebuilt_rules_package/configs/serverless.config.ts
   - x-pack/test/security_solution_api_integration/test_suites/detections_response/default_license/prebuilt_rules/update_prebuilt_rules_package/configs/ess.config.ts
   - test/api_integration/apis/local_and_ess_is_es_archiver_slow/config.ts
+  - x-pack/test_serverless/api_integration/test_suites/serverless_is_es_archiver_slow/config.ts
 
 
 
