@@ -53,6 +53,9 @@ export interface FinalResult {
   avg: OneDecimalStr;
   min: OneDecimalStr;
   max: OneDecimalStr;
+  env?: RuntimeEnv;
+  concurrency?: number;
+  highWaterMark?: number;
 }
 export type RuntimeEnv = 'LOCAL' | 'ESS' | 'SERVERLESS';
 export type MarkdownMetricsTriplet = `${OneDecimalStr} / ${OneDecimalStr} / ${OneDecimalStr}`;

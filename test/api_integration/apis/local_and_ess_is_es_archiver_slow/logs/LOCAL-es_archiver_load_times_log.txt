@@ -1,0 +1,176 @@
+"λλλ Init Logging @ Nov 14, 2023, 11:14 AM"
+λ os.arch -> arm64
+λ os.platform -> darwin
+λ os.totalmem -> 34.4 GB
+λ os.freemem -> 988.3 MB
+λ CPU Count -> 10
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:596",
+    "afterLoadTimeStamp": "11:14:643",
+    "diff": {
+      "milliseconds": 8047
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:698",
+    "afterLoadTimeStamp": "11:14:410",
+    "diff": {
+      "milliseconds": 8712
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:231",
+    "afterLoadTimeStamp": "11:14:986",
+    "diff": {
+      "milliseconds": 8755
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:732",
+    "afterLoadTimeStamp": "11:14:131",
+    "diff": {
+      "milliseconds": 8399
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:826",
+    "afterLoadTimeStamp": "11:14:711",
+    "diff": {
+      "milliseconds": 7885
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:505",
+    "afterLoadTimeStamp": "11:14:669",
+    "diff": {
+      "milliseconds": 9164
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:14:318",
+    "afterLoadTimeStamp": "11:15:082",
+    "diff": {
+      "milliseconds": 8764
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:15:791",
+    "afterLoadTimeStamp": "11:15:100",
+    "diff": {
+      "milliseconds": 8309
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:15:872",
+    "afterLoadTimeStamp": "11:15:261",
+    "diff": {
+      "milliseconds": 8389
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/alias",
+    "beforeLoadTimeStamp": "11:15:808",
+    "afterLoadTimeStamp": "11:15:568",
+    "diff": {
+      "milliseconds": 7760
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:15:341",
+    "afterLoadTimeStamp": "11:15:597",
+    "diff": {
+      "milliseconds": 7256
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:15:680",
+    "afterLoadTimeStamp": "11:15:988",
+    "diff": {
+      "milliseconds": 7308
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:15:744",
+    "afterLoadTimeStamp": "11:15:816",
+    "diff": {
+      "milliseconds": 8072
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:16:627",
+    "afterLoadTimeStamp": "11:16:868",
+    "diff": {
+      "milliseconds": 7241
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:16:544",
+    "afterLoadTimeStamp": "11:16:184",
+    "diff": {
+      "milliseconds": 7640
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:16:880",
+    "afterLoadTimeStamp": "11:16:967",
+    "diff": {
+      "milliseconds": 7087
+    }
+  }
+}
+{
+  "archive": {
+    "name": "test/functional/fixtures/es_archiver/dashboard/current/data",
+    "beforeLoadTimeStamp": "11:16:774",
+    "afterLoadTimeStamp": "11:16:130",
+    "diff": {
+      "milliseconds": 7356
+    }
+  }
+}
