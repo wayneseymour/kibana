@@ -69,8 +69,8 @@ export function createIndexDocRecordsStream(
   }
 
   return new Writable({
-    // highWaterMark: parseInt((process.env.HIGH_WATER_MARK as string) ?? 5000, 10),
-    highWaterMark: 300,
+    highWaterMark: parseInt((process.env.HIGH_WATER_MARK as string) ?? 5000, 10),
+    // highWaterMark: 300,
     objectMode: true,
 
     async write(record, enc, callback) {

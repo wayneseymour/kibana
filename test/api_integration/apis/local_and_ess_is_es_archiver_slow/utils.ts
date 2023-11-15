@@ -302,7 +302,7 @@ export const afterAll = (
 
     finalResults
       .map(printEachJsonVerbose(log))
-      .map(csvify({ env: theEnv, concurrency: 0, highWaterMark: 300 }))
+      .map(csvify({ env: theEnv, concurrency: 0, highWaterMark: 5000 }))
       // @ts-ignore
       .map(flushCsv(logDirAbsolutePath)(theEnv))
       .forEach((x) => console.log(x));
@@ -459,12 +459,12 @@ const xpack = [
   'x-pack/test/saved_object_tagging/common/fixtures/es_archiver/logstash_functional',
   ...recentlyFound,
 ];
-// const single = ['test/functional/fixtures/es_archiver/index_pattern_without_timefield'];
+const single = ['test/functional/fixtures/es_archiver/alias'];
 const _archives = [
-  // ...single,
-  ...fixed,
-  ...oss,
-  ...xpack,
+  ...single,
+  // ...fixed,
+  // ...oss,
+  // ...xpack,
 ];
 const xs = new Set(_archives);
 export const archives = Array.from(xs).sort((a, b) => a.localeCompare(b));
