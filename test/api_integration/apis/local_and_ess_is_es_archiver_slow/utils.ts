@@ -459,12 +459,12 @@ const xpack = [
   'x-pack/test/saved_object_tagging/common/fixtures/es_archiver/logstash_functional',
   ...recentlyFound,
 ];
-const single = ['test/functional/fixtures/es_archiver/alias'];
+// const single = ['test/functional/fixtures/es_archiver/alias'];
 const _archives = [
-  ...single,
-  // ...fixed,
-  // ...oss,
-  // ...xpack,
+  // ...single,
+  ...fixed,
+  ...oss,
+  ...xpack,
 ];
 const xs = new Set(_archives);
 export const archives = Array.from(xs).sort((a, b) => a.localeCompare(b));
