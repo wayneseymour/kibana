@@ -26,7 +26,9 @@ import type {
   ArchiveWithManyFieldsAndOrManyDocs,
 } from '../../../../../test/api_integration/apis/local_and_ess_is_es_archiver_slow/shared.types';
 
-const LOOP_LIMIT_OVERRIDE_SERVERLESS_ONLY: number = 10;
+// const LOOP_LIMIT_OVERRIDE_SERVERLESS_ONLY: number = 10;
+const LOOP_LIMIT_OVERRIDE_SERVERLESS_ONLY: number = 3;
+
 const LOGS_DIR: string =
   process.env.LOGS_DIR ??
   'x-pack/test_serverless/api_integration/test_suites/serverless_is_es_archiver_slow/logs';

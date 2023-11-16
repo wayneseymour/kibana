@@ -302,7 +302,7 @@ export const afterAll = (
 
     finalResults
       .map(printEachJsonVerbose(log))
-      .map(csvify({ env: theEnv, concurrency: 0, highWaterMark: 5000 }))
+      .map(csvify({ env: theEnv, concurrency: 4, highWaterMark: 5000 }))
       // @ts-ignore
       .map(flushCsv(logDirAbsolutePath)(theEnv))
       .forEach((x) => console.log(x));
