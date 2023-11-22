@@ -280,7 +280,7 @@ const csvify =
     highWaterMark: number;
   }) =>
   ({ name, avg, min, max }: FinalResult): string =>
-    `${name},${avg},${min},${max},${env},${concurrency},${highWaterMark}`;
+    `${name},${env},${concurrency},${highWaterMark},${avg},${min},${max}`;
 
 const flushCsv = (logDirAbsolutePath: PathLike) => (theEnv: string) => (result: FinalResult) => {
   ioFlushAppendLog(csvPathAndFileNameF(logDirAbsolutePath)(theEnv))(result);
