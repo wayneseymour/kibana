@@ -283,6 +283,64 @@ export default function ({ getService }: FtrProviderContext) {
       });
     });
 
+    describe('scripted fields', () => {
+      before(async () => {
+        await reportingAPI.initLogs();
+        await esArchiver.load('x-pack/test/functional/es_archives/reporting/hugedata');
+      });
+
+      after(async () => {
+        await reportingAPI.teardownLogs();
+        await esArchiver.unload('x-pack/test/functional/es_archives/reporting/hugedata');
+      });
+
+      it('years_ago field calculates the number of years to 2019', async () => {
+        const res = (await generateAPI.getCSVFromSearchSource(
+          getMockJobParams({
+            browserTimezone: 'UTC',
+            version: '8.13.0',
+            searchSource: {
+              query: { query: '', language: 'kuery' },
+              fields: [{ field: '*', include_unmapped: 'true' }],
+              index: '89655130-5013-11e9-bce7-4dabcb8bef24',
+              sort: [{ date: { order: 'desc', format: 'strict_date_optional_time' } }],
+              filter: [
+                {
+                  query: { match_phrase: { 'name.keyword': 'Fethany' } },
+                },
+              ],
+              parent: {
+                query: { query: '', language: 'kuery' },
+                filter: [],
+                parent: {
+                  filter: [
+                    {
+                      query: {
+                        range: {
+                          date: {
+                            format: 'strict_date_optional_time',
+                            gte: '1979-09-01T05:31:57.572Z',
+                            lte: '1980-04-18T10:47:57.709Z',
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            columns: [],
+            title: 'years_ago',
+          })
+        )) as supertest.Response;
+        const { status: resStatus, text: resText, type: resType } = res;
+
+        expect(resStatus).to.eql(200);
+        expect(resType).to.eql('text/csv');
+        expectSnapshot(resText).toMatch();
+      });
+    });
+
     describe('nanosecond formatting', () => {
       before(async () => {
         await esArchiver.load('x-pack/test/functional/es_archives/reporting/nanos');

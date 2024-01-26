@@ -171,38 +171,5 @@ export default function ({ getService, getPageObjects }: FtrProviderContext) {
         expectSnapshot(csvFile).toMatch();
       });
     });
-
-    describe('Field Formatters and Scripted Fields', () => {
-      const dashboardWithScriptedFieldsSearch = 'names dashboard';
-
-      before(async () => {
-        await reporting.initLogs();
-        await esArchiver.load('x-pack/test/functional/es_archives/reporting/hugedata');
-
-        await navigateToDashboardApp();
-        await PageObjects.dashboard.loadSavedDashboard(dashboardWithScriptedFieldsSearch);
-        await PageObjects.timePicker.setAbsoluteRange(
-          'Nov 26, 1981 @ 21:54:15.526',
-          'Mar 5, 1982 @ 18:17:44.821'
-        );
-
-        await PageObjects.common.sleep(1000);
-        await filterBar.addFilter({ field: 'name.keyword', operation: 'is', value: 'Fethany' });
-        await PageObjects.common.sleep(1000);
-      });
-
-      after(async () => {
-        await reporting.teardownLogs();
-        await esArchiver.unload('x-pack/test/functional/es_archives/reporting/hugedata');
-      });
-
-      it('Download CSV export of a saved search panel', async () => {
-        await clickActionsMenu('namessearch');
-        await clickDownloadCsv();
-
-        const csvFile = await getDownload(getCsvPath('namessearch'));
-        expectSnapshot(csvFile).toMatch();
-      });
-    });
   });
 }

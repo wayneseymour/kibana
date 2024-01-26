@@ -383,7 +383,7 @@ export class CsvGenerator {
     // apply timezone from the job to all date field formatters
     try {
       index.fields.getByType('date').forEach(({ name }) => {
-        logger.debug(`Setting timezone on ${name}`);
+        logger.debug(`Setting ${timezone} timezone on ${name}`);
         const format: FieldFormatConfig = {
           ...index.fieldFormatMap[name],
           id: index.fieldFormatMap[name]?.id || 'date', // allow id: date_nanos

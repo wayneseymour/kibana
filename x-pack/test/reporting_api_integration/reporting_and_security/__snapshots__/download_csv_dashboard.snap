@@ -175,6 +175,12 @@ exports[`Reporting APIs CSV Generation from SearchSource non-timebased With filt
 "
 `;
 
+exports[`Reporting APIs CSV Generation from SearchSource scripted fields years_ago field calculates the number of years to 2019 1`] = `
+"\\"_id\\",\\"_index\\",\\"_score\\",date,\\"date_informal\\",gender,\\"gender.keyword\\",name,\\"name.keyword\\",percent,value,year,\\"years_ago\\"
+\\"1980-Fethany-F\\",babynames,\\"-\\",\\"Jan 1, 1980 @ 00:00:00.000\\",\\"Jan 1st 80\\",F,F,Fethany,Fethany,0,702,1980,\\"39.00000000000000000000\\"
+"
+`;
+
 exports[`Reporting APIs CSV Generation from SearchSource unquoted values Exports CSV with all fields when using defaults 1`] = `
 "_id,_index,_score,category,category.keyword,currency,customer_first_name,customer_first_name.keyword,customer_full_name,customer_full_name.keyword,customer_gender,customer_id,customer_last_name,customer_last_name.keyword,customer_phone,day_of_week,day_of_week_i,email,geoip.city_name,geoip.continent_name,geoip.country_iso_code,geoip.location,geoip.region_name,manufacturer,manufacturer.keyword,order_date,order_id,products._id,products._id.keyword,products.base_price,products.base_unit_price,products.category,products.category.keyword,products.created_on,products.discount_amount,products.discount_percentage,products.manufacturer,products.manufacturer.keyword,products.min_price,products.price,products.product_id,products.product_name,products.product_name.keyword,products.quantity,products.sku,products.tax_amount,products.taxful_price,products.taxless_price,products.unit_discount_amount,sku,taxful_total_price,taxless_total_price,total_quantity,total_unique_products,type,user
 9AMtOW0BH63Xcmy432DJ,ecommerce,-,Men's Clothing,Men's Clothing,EUR,Boris,Boris,Boris Bradley,Boris Bradley,MALE,36,Bradley,Bradley,(empty),Wednesday,2,boris@bradley-family.zzz,-,Europe,GB,POINT (-0.1 51.5),-,Microlutions, Elitelligence,Microlutions, Elitelligence,Jun 25, 2019 @ 00:00:00.000,568397,sold_product_568397_24419, sold_product_568397_20207,sold_product_568397_24419, sold_product_568397_20207,33, 28.984,33, 28.984,Men's Clothing, Men's Clothing,Men's Clothing, Men's Clothing,Dec 14, 2016 @ 00:00:00.000, Dec 14, 2016 @ 00:00:00.000,0, 0,0, 0,Microlutions, Elitelligence,Microlutions, Elitelligence,17.484, 13.922,33, 28.984,24,419, 20,207,Cargo trousers - oliv, Trousers - black,Cargo trousers - oliv, Trousers - black,1, 1,ZO0112101121, ZO0530405304,0, 0,33, 28.984,33, 28.984,0, 0,ZO0112101121, ZO0530405304,61.969,61.969,2,2,order,boris
