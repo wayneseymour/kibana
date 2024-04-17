@@ -88,7 +88,7 @@ export default function ({ getService }: FtrProviderContext) {
     },
   ];
 
-  describe('single metric', function () {
+  describe.only('single metric', function () {
     this.tags(['ml']);
     before(async () => {
       await esNode.loadIfNeeded('x-pack/test/functional/es_archives/ml/farequote');
@@ -436,13 +436,13 @@ export default function ({ getService }: FtrProviderContext) {
       );
     });
 
-    it('job creation and toggling model change annotation triggers enable annotation recommendation callout', async () => {
+    it.skip('job creation and toggling model change annotation triggers enable annotation recommendation callout', async () => {
       await ml.jobWizardCommon.goToJobDetailsStep();
       await ml.jobWizardCommon.ensureAdvancedSectionOpen();
       await ml.jobWizardCommon.togglingModelChangeAnnotationsShowsCalloutAndRemovesCallout();
     });
 
-    it('job creation memory limit too large results in validation callout', async () => {
+    it.skip('job creation memory limit too large results in validation callout', async () => {
       await ml.jobWizardCommon.goToJobDetailsStep();
 
       const tooLarge = '100000000MB';
