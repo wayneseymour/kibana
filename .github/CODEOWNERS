@@ -1401,6 +1401,9 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/x-pack/test/api_integration/apis/telemetry @elastic/kibana-core
+/x-pack/test/api_integration/apis/status @elastic/kibana-core
+/x-pack/test/api_integration/apis/stats @elastic/kibana-core
 /test/interpreter_functional/plugins/kbn_tp_run_pipeline @elastic/kibana-core
 /test/server_integration/http @elastic/kibana-core
 /test/server_integration/plugins/status_plugin* @elastic/kibana-core
@@ -1562,6 +1565,7 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/x-pack/test/api_integration/apis/searchprofiler @elastic/kibana-management
 /x-pack/test/functional/apps/dev_tools @elastic/kibana-management
 /x-pack/test/functional/apps/dev_tools/embedded_console.ts @elastic/search-kibana
 /test/functional/apps/console @elastic/kibana-management
@@ -1885,8 +1889,8 @@ x-pack/test/security_solution_cypress/cypress/tasks/expandable_flyout  @elastic/
 /x-pack/plugins/security_solution/public/common/components/threat_match @elastic/security-detection-engine
 
 ## Security Solution sub teams - security-defend-workflows
-/x-pack/test/osquery_cypress @elastic/security-defend-workflows
 /x-pack/test/api_integration/apis/osquery @elastic/security-defend-workflows
+/x-pack/test/osquery_cypress @elastic/security-defend-workflows
 /x-pack/plugins/security_solution/public/management/ @elastic/security-defend-workflows
 /x-pack/plugins/security_solution/public/common/lib/endpoint/ @elastic/security-defend-workflows
 /x-pack/plugins/security_solution/public/common/components/endpoint/ @elastic/security-defend-workflows
