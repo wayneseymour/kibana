@@ -1339,6 +1339,11 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 #CC# /src/plugins/kibana_react/public/code_editor/ @elastic/kibana-presentation
 
 # Machine Learning
+/x-pack/test/stack_functional_integration/apps/ml @elastic/ml-ui
+/x-pack/test/monitoring_api_integration/fixtures/elasticsearch/ml_jobs.json @elastic/ml-ui
+/x-pack/test/monitoring_api_integration/apis/elasticsearch/ml_jobs.ts @elastic/ml-ui
+/x-pack/test/functional/fixtures/kbn_archiver/ml @elastic/ml-ui
+/x-pack/test/accessibility/apps/group2/ml_* @elastic/ml-ui
 /x-pack/test/api_integration/apis/file_upload @elastic/ml-ui
 /x-pack/test/accessibility/apps/group2/ml.ts  @elastic/ml-ui
 /x-pack/test/accessibility/apps/group3/ml_embeddables_in_dashboard.ts @elastic/ml-ui
@@ -1480,6 +1485,7 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/x-pack/test/functional/apps/status_page @elastic/kibana-core
 /x-pack/test/cloud_integration @elastic/kibana-core
 /x-pack/test/cloud_integration/plugins/saml_provider @elastic/kibana-core
 /test/server_integration/plugins/status_plugin_* @elastic/kibana-core
@@ -1690,6 +1696,13 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/x-pack/test/functional/apps/cross_cluster_replication @elastic/kibana-management
+/x-pack/test/functional/apps/ingest_pipelines @elastic/kibana-management
+/x-pack/test/functional/apps/home @elastic/kibana-management
+/x-pack/test/functional/apps/license_management @elastic/kibana-management
+/x-pack/test/functional/apps/management @elastic/kibana-management
+/x-pack/test/functional/apps/remote_clusters @elastic/kibana-management
+/x-pack/test/functional/apps/upgrade_assistant @elastic/kibana-management
 /x-pack/test/functional/apps/dev_tools @elastic/kibana-management
 /test/plugin_functional/test_suites/management @elastic/kibana-management
 /x-pack/test/upgrade_assistant_integration @elastic/kibana-management
