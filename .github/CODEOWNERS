@@ -1362,7 +1362,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 /x-pack/test/api_integration/services/ml.ts @elastic/ml-ui
 
 # Additional plugins and packages maintained by the ML team.
-/test/examples/response_stream/*.ts  @elastic/ml-ui
+/test/examples/response_stream/*.ts @elastic/ml-ui
 /x-pack/test/accessibility/apps/group2/transform.ts  @elastic/ml-ui
 /x-pack/test/api_integration/apis/aiops/ @elastic/ml-ui
 /x-pack/test/api_integration/apis/transform/ @elastic/ml-ui
@@ -1695,6 +1695,11 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/x-pack/test_serverless/functional/test_suites/common/spaces/spaces_management.ts @elastic/kibana-management
+/x-pack/test/stack_functional_integration/apps/management @elastic/kibana-management
+/x-pack/test/functional/page_objects/*_management_page.ts @elastic/kibana-management
+/test/functional/services/saved_query_management_component.ts @elastic/kibana-management
+/test/functional/services/management @elastic/kibana-management
 /x-pack/test/functional/apps/cross_cluster_replication @elastic/kibana-management
 /x-pack/test/functional/apps/ingest_pipelines @elastic/kibana-management
 /x-pack/test/functional/apps/home @elastic/kibana-management
