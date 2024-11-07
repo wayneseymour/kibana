@@ -2207,7 +2207,7 @@ x-pack/plugins/observability_solution/observability_shared/public/components/pro
 /test/examples/error_boundary/index.ts @elastic/appex-sharedux
 /test/examples/content_management/*.ts @elastic/appex-sharedux
 /test/examples/bfetch_explorer/*.ts @elastic/appex-sharedux
-/test/api_integration/apis/guided_onboarding.ts @elastic/appex-sharedux
+/test/api_integration/apis/guided_onboarding @elastic/appex-sharedux
 /x-pack/test/banners_functional @elastic/appex-sharedux
 /x-pack/test/custom_branding @elastic/appex-sharedux
 /x-pack/test/api_integration/apis/content_management @elastic/appex-sharedux
