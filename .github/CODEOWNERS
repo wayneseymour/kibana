@@ -1034,6 +1034,7 @@ x-pack/test_serverless/api_integration/test_suites/common/platform_security @ela
 /x-pack/test/api_integration/apis/entity_manager @elastic/obs-entities
 
 # Data Discovery
+/test/functional/page_objects/unified_search_page.ts @elastic/kibana-data-discovery
 /test/plugin_functional/plugins/index_patterns @elastic/kibana-data-discovery
 /test/plugin_functional/plugins/data_search @elastic/kibana-data-discovery
 /test/functional/page_objects/discover_page.ts @elastic/kibana-data-discovery
@@ -1103,6 +1104,16 @@ src/plugins/discover/public/context_awareness/profile_providers/security @elasti
 /x-pack/test/screenshot_creation @elastic/platform-docs
 
 # Visualizations
+/test/functional/page_objects/vega_chart_page.ts @elastic/kibana-visualizations
+/test/functional/page_objects/visual_builder_page.ts @elastic/kibana-visualizations
+/test/functional/page_objects/visualize_*.ts @elastic/kibana-visualizations
+/test/functional/page_objects/timelion_page.ts @elastic/kibana-visualizations
+/test/functional/page_objects/time_to_visualize_page.ts @elastic/kibana-visualizations
+/test/functional/page_objects/tag_cloud_page.ts @elastic/kibana-visualizations
+/x-pack/test/functional/page_objects/lens_page.ts @elastic/kibana-visualizations
+/x-pack/test/functional/es_archives/lens @elastic/kibana-visualizations
+/x-pack/test/examples/embedded_lens @elastic/kibana-visualizations
+/x-pack/test/api_integration/fixtures/kbn_archiver/lens/constant_keyword.json @elastic/kibana-visualizations
 /test/plugin_functional/test_suites/custom_visualizations @elastic/kibana-visualizations
 /test/plugin_functional/plugins/kbn_tp_custom_visualizations @elastic/kibana-visualizations
 /x-pack/test/functional/fixtures/kbn_archiver/visualize @elastic/kibana-visualizations
@@ -1127,6 +1138,7 @@ packages/kbn-monaco/src/esql
 
 # ESQL
 /test/api_integration/apis/esql/*.ts @elastic/kibana-esql
+/test/functional/services/esql.ts @elastic/kibana-esql
 
 # Global Experience
 
@@ -1270,8 +1282,8 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 /x-pack/test_serverless/**/test_suites/**/fleet/ @elastic/fleet
 
 # APM
-/test/api_integration/apis/ui_metric/*.ts  @elastic/obs-ux-infra_services-team
-/x-pack/test/functional/apps/apm/  @elastic/obs-ux-infra_services-team
+/test/api_integration/apis/ui_metric/*.ts @elastic/obs-ux-infra_services-team
+/x-pack/test/functional/apps/apm/ @elastic/obs-ux-infra_services-team
 /x-pack/test/apm_api_integration/ @elastic/obs-ux-infra_services-team
 /src/apm.js @elastic/kibana-core @vigneshshanmugam
 /packages/kbn-utility-types/src/dot.ts @dgieselaar
@@ -1315,6 +1327,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 ### END Observability Plugins
 
 # Presentation
+/test/functional/page_objects/share_page.ts @elastic/kibana-presentation
 /x-pack/test/disable_ems @elastic/kibana-presentation # Assigned per https://github.com/elastic/kibana/pull/165986
 /x-pack/test/functional/fixtures/kbn_archiver/dashboard* @elastic/kibana-presentation
 /test/functional/page_objects/dashboard_page* @elastic/kibana-presentation
@@ -1415,7 +1428,17 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 /.eslintignore @elastic/kibana-operations
 
 # QA - Appex QA
-/test/kibana.jsonc @elastic/appex-qa
+/test/functional/services/index.ts @elastic/appex-qa
+/test/functional/services/global_nav.ts @elastic/appex-qa
+/test/functional/services/flyout.ts @elastic/appex-qa
+/test/functional/services/filter_bar.ts @elastic/appex-qa
+/test/functional/services/field_editor.ts @elastic/appex-qa
+/test/functional/services/embedding.ts @elastic/appex-qa
+/test/functional/services/doc_table.ts @elastic/appex-qa
+/test/functional/services/data_grid.ts @elastic/appex-qa
+/test/functional/services/combo_box.ts @elastic/appex-qa
+/test/functional/page_objects/unified_field_list.ts @elastic/appex-qa
+/test/functional/page_objects/time_picker.ts @elastic/appex-qa
 /test/functional/page_objects/index.ts @elastic/appex-qa
 /test/functional/page_objects/header_page.ts @elastic/appex-qa
 /test/functional/page_objects/error_page.ts @elastic/appex-qa
@@ -1485,6 +1508,7 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/test/functional/services/apps_menu.ts @elastic/kibana-core
 /x-pack/test/functional/apps/status_page @elastic/kibana-core
 /x-pack/test/cloud_integration @elastic/kibana-core
 /x-pack/test/cloud_integration/plugins/saml_provider @elastic/kibana-core
@@ -1696,6 +1720,7 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/test/functional/services/data_views.ts @elastic/kibana-management
 /x-pack/test_serverless/functional/test_suites/common/spaces/spaces_management.ts @elastic/kibana-management
 /x-pack/test/stack_functional_integration/apps/management @elastic/kibana-management
 /x-pack/test/functional/page_objects/*_management_page.ts @elastic/kibana-management
@@ -2149,6 +2174,7 @@ x-pack/plugins/security_solution/server/lib/security_integrations @elastic/secur
 /x-pack/plugins/security_solution_serverless/**/*.scss @elastic/security-design
 
 # Logstash
+/x-pack/test/monitoring_api_integration/fixtures/logstash @elastic/logstash
 /x-pack/test/api_integration/apis/logstash @elastic/logstash
 #CC# /x-pack/plugins/logstash/ @elastic/logstash
 
@@ -2168,6 +2194,8 @@ x-pack/test/profiling_api_integration @elastic/obs-ux-infra_services-team
 x-pack/plugins/observability_solution/observability_shared/public/components/profiling @elastic/obs-ux-infra_services-team
 
 # Shared UX
+/x-pack/test/functional/fixtures/kbn_archiver/global_search @elastic/appex-sharedux
+/x-pack/test/plugin_functional/test_suites/global_search @elastic/appex-sharedux
 /test/plugin_functional/test_suites/shared_ux @elastic/appex-sharedux
 /test/plugin_functional/plugins/kbn_sample_panel_action @elastic/appex-sharedux
 /test/plugin_functional/plugins/eui_provider_dev_warning @elastic/appex-sharedux
