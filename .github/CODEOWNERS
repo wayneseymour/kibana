@@ -1252,6 +1252,8 @@ packages/kbn-monaco/src/esql
 /x-pack/test/functional/apps/infra/logs @elastic/obs-ux-logs-team
 
 # Observability UX management team
+/x-pack/test/functional/services/slo @elastic/obs-ux-management-team
+/x-pack/test/functional/apps/slo @elastic/obs-ux-management-team
 /x-pack/test/observability_api_integration @elastic/obs-ux-management-team # Assigned per https://github.com/elastic/kibana/pull/182243
 /x-pack/test/functional/services/observability @elastic/obs-ux-management-team
 /x-pack/test/api_integration/apis/slos @elastic/obs-ux-management-team
@@ -1780,6 +1782,7 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/x-pack/test/functional/apps/snapshot_restore @elastic/kibana-management
 /x-pack/test/functional/apps/painless_lab @elastic/kibana-management
 /test/functional/services/data_views.ts @elastic/kibana-management
 /x-pack/test_serverless/functional/test_suites/common/spaces/spaces_management.ts @elastic/kibana-management
