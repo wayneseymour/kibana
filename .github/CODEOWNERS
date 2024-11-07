@@ -1327,6 +1327,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 ### END Observability Plugins
 
 # Presentation
+/test/functional/screenshots/baseline/area_chart.png @elastic/kibana-presentation
 /test/functional/page_objects/share_page.ts @elastic/kibana-presentation
 /x-pack/test/disable_ems @elastic/kibana-presentation # Assigned per https://github.com/elastic/kibana/pull/165986
 /x-pack/test/functional/fixtures/kbn_archiver/dashboard* @elastic/kibana-presentation
@@ -1428,6 +1429,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 /.eslintignore @elastic/kibana-operations
 
 # QA - Appex QA
+/test/functional/screenshots/.empty @elastic/appex-qa
 /test/common/fixtures/plugins/coverage @elastic/appex-qa
 /test/functional/services/index.ts @elastic/appex-qa
 /test/functional/services/global_nav.ts @elastic/appex-qa
@@ -1548,7 +1550,7 @@ x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor te
 /test/functional/firefox/home.config.ts @elastic/kibana-core
 /test/functional/apps/status_page/*.ts @elastic/kibana-core
 /test/functional/apps/home @elastic/kibana-core
-/test/functional/apps/bundles/*.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/64367
+/test/functional/apps/bundles @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/64367
 /test/examples/hello_world @elastic/kibana-core
 /test/examples/routing/index.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/69581
 /test/common/plugins/newsfeed @elastic/kibana-core
@@ -2203,7 +2205,7 @@ x-pack/plugins/observability_solution/observability_shared/public/components/pro
 /test/plugin_functional/plugins/eui_provider_dev_warning @elastic/appex-sharedux
 /test/functional/page_objects/settings_page.ts @elastic/appex-sharedux
 /test/functional/apps/sharing/*.ts @elastic/appex-sharedux
-/test/functional/apps/kibana_overview/*.ts @elastic/appex-sharedux
+/test/functional/apps/kibana_overviews @elastic/appex-sharedux
 /test/examples/ui_actions/*.ts @elastic/appex-sharedux
 /test/examples/state_sync/*.ts @elastic/appex-sharedux
 /test/examples/error_boundary/index.ts @elastic/appex-sharedux
