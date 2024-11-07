@@ -1196,7 +1196,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 
 ## infra/{common,docs,public,server}/{sub-folders}/ -> @elastic/obs-ux-infra_services-team
 /x-pack/test/functional/es_archives/infra @elastic/obs-ux-infra_services-team
-/test/common/plugins/otel_metrics/**/*.ts @elastic/obs-ux-infra_services-team
+/test/common/plugins/otel_metrics @elastic/obs-ux-infra_services-team
 /x-pack/plugins/observability_solution/infra/common @elastic/obs-ux-infra_services-team
 /x-pack/plugins/observability_solution/infra/docs @elastic/obs-ux-infra_services-team
 /x-pack/plugins/observability_solution/infra/public/alerting @elastic/obs-ux-infra_services-team
@@ -1549,9 +1549,9 @@ x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor te
 /test/functional/apps/status_page/*.ts @elastic/kibana-core
 /test/functional/apps/home @elastic/kibana-core
 /test/functional/apps/bundles/*.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/64367
+/test/examples/hello_world @elastic/kibana-core
 /test/examples/routing/index.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/69581
-/examples/hello_world @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/107789/files#diff-3d36a1bf06148bc6ba1ce2ed3d19de32ea708d955fed212c0d27c536f0bd4da7R208
-/test/common/plugins/newsfeed/**/*.ts @elastic/kibana-core
+/test/common/plugins/newsfeed @elastic/kibana-core
 /test/common/configure_http2.ts @elastic/kibana-core
 /test/api_integration/apis/ui_counters @elastic/kibana-core
 /test/api_integration/apis/telemetry/**/*.[j|t]s @elastic/kibana-core
