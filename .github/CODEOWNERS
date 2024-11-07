@@ -1552,9 +1552,9 @@ x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor te
 /test/common/plugins/newsfeed/**/*.ts @elastic/kibana-core
 /test/common/configure_http2.ts @elastic/kibana-core
 /test/api_integration/apis/ui_counters @elastic/kibana-core
-/test/api_integration/apis/telemetry/**/*.ts @elastic/kibana-core
-/test/api_integration/apis/status/*.ts @elastic/kibana-core
-/test/api_integration/apis/stats/*.ts @elastic/kibana-core # Assigned per: https://github.com/elastic/kibana/pull/20577
+/test/api_integration/apis/telemetry/**/*.[j|t]s @elastic/kibana-core
+/test/api_integration/apis/status @elastic/kibana-core
+/test/api_integration/apis/statss @elastic/kibana-core # Assigned per: https://github.com/elastic/kibana/pull/20577
 /test/api_integration/apis/saved_objects* @elastic/kibana-core
 /test/api_integration/apis/home/*.ts @elastic/kibana-core
 /test/api_integration/apis/core/*.ts @elastic/kibana-core
