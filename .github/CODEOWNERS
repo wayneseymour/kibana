@@ -1244,12 +1244,15 @@ packages/kbn-monaco/src/esql
 /x-pack/plugins/observability_solution/infra/server/routes/log_alerts @elastic/obs-ux-logs-team
 /x-pack/plugins/observability_solution/infra/server/routes/log_analysis @elastic/obs-ux-logs-team
 /x-pack/plugins/observability_solution/infra/server/services/rules @elastic/obs-ux-infra_services-team @elastic/obs-ux-logs-team
+/x-pack/test/common/utils/synthtrace @elastic/obs-ux-infra_services-team @elastic/obs-ux-logs-team # Assigned per https://github.com/elastic/kibana/blob/main/packages/kbn-apm-synthtrace/kibana.jsonc#L5
 # Infra Monitoring tests
+/x-pack/test/monitoring_api_integration @elastic/obs-ux-infra_services-team
 /x-pack/test/api_integration/apis/infra @elastic/obs-ux-infra_services-team
 /x-pack/test/functional/apps/infra @elastic/obs-ux-infra_services-team
 /x-pack/test/functional/apps/infra/logs @elastic/obs-ux-logs-team
 
 # Observability UX management team
+/x-pack/test/observability_api_integration @elastic/obs-ux-management-team # Assigned per https://github.com/elastic/kibana/pull/182243
 /x-pack/test/functional/services/observability @elastic/obs-ux-management-team
 /x-pack/test/api_integration/apis/slos @elastic/obs-ux-management-team
 /x-pack/test/accessibility/apps/group1/uptime.ts @elastic/obs-ux-management-team
@@ -1440,6 +1443,8 @@ packages/kbn-monaco/src/esql
 /.eslintignore @elastic/kibana-operations
 
 # QA - Appex QA
+/x-pack/test/tsconfig.json @elastic/appex-qa
+/x-pack/test/load @elastic/appex-qa
 /test/tsconfig.json @elastic/appex-qa
 /test/plugin_functional/services/index.ts @elastic/appex-qa
 /test/plugin_functional/README.md @elastic/appex-qa
@@ -1535,6 +1540,8 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/x-pack/test/plugin_api_integration @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/146704
+/x-pack/test/localization/ @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/146704
 /test/ui_capabilities/newsfeed_err @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/66562
 /test/server_integration/services/types.d.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/81140
 /test/server_integration/http @elastic/kibana-core
@@ -1651,6 +1658,7 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 
 # Kibana Platform Security
 # Kibana Security
+/x-pack/test/ftr_apis/security_and_spaces @elastic/kibana-security
 /test/server_integration/services/supertest.js @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
 /test/server_integration/http/ssl @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
 /test/server_integration/config.base.js @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
@@ -1762,6 +1770,7 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional_search/ @elastic/search-kibana
 
 # Management Experience - Deployment Management
+/x-pack/test/functional/apps/painless_lab @elastic/kibana-management
 /test/functional/services/data_views.ts @elastic/kibana-management
 /x-pack/test_serverless/functional/test_suites/common/spaces/spaces_management.ts @elastic/kibana-management
 /x-pack/test/stack_functional_integration/apps/management @elastic/kibana-management
@@ -2113,6 +2122,7 @@ x-pack/test/security_solution_cypress/cypress/tasks/expandable_flyout  @elastic/
 
 ## Security Solution sub teams
 # security-defend-workflows
+/x-pack/test/defend_workflows_cypress @elastic/security-defend-workflows
 /x-pack/test/security_solution_ftr @elastic/security-defend-workflows
 /x-pack/test/osquery_cypress @elastic/security-defend-workflows
 /x-pack/test/api_integration/apis/osquery @elastic/security-defend-workflows
@@ -2217,6 +2227,7 @@ x-pack/plugins/security_solution/server/lib/security_integrations @elastic/secur
 /x-pack/plugins/security_solution_serverless/**/*.scss @elastic/security-design
 
 # Logstash
+/x-pack/test/functional/apps/logstash @elastic/logstash
 /x-pack/test/monitoring_api_integration/fixtures/logstash @elastic/logstash
 /x-pack/test/api_integration/apis/logstash @elastic/logstash
 #CC# /x-pack/plugins/logstash/ @elastic/logstash
@@ -2237,6 +2248,7 @@ x-pack/test/profiling_api_integration @elastic/obs-ux-infra_services-team
 x-pack/plugins/observability_solution/observability_shared/public/components/profiling @elastic/obs-ux-infra_services-team
 
 # Shared UX
+/x-pack/test/functional/apps/advanced_settings @elastic/appex-sharedux
 /test/functional/services/monaco_editor.ts @elastic/appex-sharedux
 /x-pack/test/functional/fixtures/kbn_archiver/global_search @elastic/appex-sharedux
 /x-pack/test/plugin_functional/test_suites/global_search @elastic/appex-sharedux
