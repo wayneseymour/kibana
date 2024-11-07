@@ -1428,6 +1428,7 @@ x-pack/test_serverless/**/test_suites/observability/ai_assistant @elastic/obs-ai
 /.eslintignore @elastic/kibana-operations
 
 # QA - Appex QA
+/test/common/fixtures/plugins/coverage @elastic/appex-qa
 /test/functional/services/index.ts @elastic/appex-qa
 /test/functional/services/global_nav.ts @elastic/appex-qa
 /test/functional/services/flyout.ts @elastic/appex-qa
@@ -1508,6 +1509,7 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/test/api_integration/fixtures/import_managed* @elastic/kibana-core
 /test/functional/services/apps_menu.ts @elastic/kibana-core
 /x-pack/test/functional/apps/status_page @elastic/kibana-core
 /x-pack/test/cloud_integration @elastic/kibana-core
