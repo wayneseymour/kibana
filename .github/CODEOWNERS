@@ -1182,7 +1182,6 @@ packages/kbn-monaco/src/esql
 
 ### Observability Plugins
 
-
 # Observability AI Assistant
 /x-pack/test_serverless/api_integration/test_suites/common/data_usage @elastic/obs-ai-assistant
 /x-pack/test_serverless/functional/test_suites/common/data_usage @elastic/obs-ai-assistant
@@ -1277,6 +1276,7 @@ packages/kbn-monaco/src/esql
 /x-pack/test/accessibility/apps/group3/stack_monitoring.ts @elastic/stack-monitoring
 
 # Fleet
+/x-pack/test/fleet_api_integration/ @elastic/fleet
 /x-pack/test/fleet_packages @elastic/fleet
 /test/api_integration/apis/custom_integration/*.ts @elastic/fleet
 /x-pack/test/fleet_api_integration
@@ -1319,9 +1319,11 @@ packages/kbn-monaco/src/esql
 /x-pack/test_serverless/functional/test_suites/observability/observability_logs_explorer @elastic/obs-ux-logs-team
 /x-pack/test/functional/apps/dataset_quality @elastic/obs-ux-logs-team
 /x-pack/test_serverless/functional/test_suites/observability/dataset_quality @elastic/obs-ux-logs-team
-/x-pack/test_serverless/functional/test_suites/observability/ @elastic/obs-ux-logs-team
 /src/plugins/unified_doc_viewer/public/components/doc_viewer_logs_overview @elastic/obs-ux-logs-team
 /x-pack/test/api_integration/apis/logs_shared @elastic/obs-ux-logs-team
+
+# # Observability-ui
+/x-pack/test_serverless/**/test_suites/observability/config.ts @elastic/observability-ui
 
 # Observability onboarding tour
 /x-pack/plugins/observability_solution/observability_shared/public/components/tour @elastic/appex-sharedux
@@ -1408,6 +1410,7 @@ packages/kbn-monaco/src/esql
 #CC# /x-pack/plugins/file_upload @elastic/kibana-gis
 
 # Operations
+/test/package @elastic/kibana-operations
 /test/package/roles @elastic/kibana-operations
 /test/common/fixtures/plugins/coverage/kibana.json @elastic/kibana-operations
 /src/dev/license_checker/config.ts @elastic/kibana-operations
@@ -1437,6 +1440,11 @@ packages/kbn-monaco/src/esql
 /.eslintignore @elastic/kibana-operations
 
 # QA - Appex QA
+/test/tsconfig.json @elastic/appex-qa
+/test/plugin_functional/services/index.ts @elastic/appex-qa
+/test/plugin_functional/README.md @elastic/appex-qa
+/test/plugin_functional/config.ts @elastic/appex-qa
+/test/kibana.jsonc @elastic/appex-qa
 /test/interpreter_functional/config.ts @elastic/appex-qa
 /test/interpreter_functional/README.md @elastic/appex-qa
 /test/harden @elastic/appex-qa
@@ -1527,6 +1535,12 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/test/ui_capabilities/newsfeed_err @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/66562
+/test/server_integration/services/types.d.ts @elastic/kibana-core # Assigned per https://github.com/elastic/kibana/pull/81140
+/test/server_integration/http @elastic/kibana-core
+/test/scripts/run_multiple_kibana_nodes.sh @elastic/kibana-core
+/test/plugin_functional/test_suites/application_links @elastic/kibana-core
+/test/interpreter_functional/test_suites/run_pipeline @elastic/kibana-core
 /test/functional/services/usage_collection.ts @elastic/kibana-core
 /test/functional/services/saved_objects_finder.ts @elastic/kibana-core
 /test/api_integration/fixtures/import_managed* @elastic/kibana-core
@@ -1636,6 +1650,11 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 #CC# /x-pack/plugins/translations/ @elastic/kibana-localization @elastic/kibana-core
 
 # Kibana Platform Security
+# Kibana Security
+/test/server_integration/services/supertest.js @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
+/test/server_integration/http/ssl @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
+/test/server_integration/config.base.js @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
+/test/server_integration/__fixtures__ @elastic/kibana-security # Assigned per https://github.com/elastic/kibana/pull/53810
 /x-pack/test/plugin_api_integration/plugins/feature_usage_test @elastic/kibana-security
 /.github/codeql @elastic/kibana-security
 /.github/workflows/codeql.yml @elastic/kibana-security
@@ -1674,6 +1693,7 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 #CC# /x-pack/plugins/security/ @elastic/kibana-security
 
 # Response Ops team
+/x-pack/test/examples/triggers_actions_ui_examples @elastic/response-ops # Assigned per https://github.com/elastic/kibana/blob/main/x-pack/examples/triggers_actions_ui_example/kibana.jsonc#L4
 /x-pack/test/functional/services/rules @elastic/response-ops
 /x-pack/test/plugin_api_integration/plugins/sample_task_plugin @elastic/response-ops
 /x-pack/test/functional/es_archives/rule_exceptions @elastic/response-ops
@@ -2093,6 +2113,7 @@ x-pack/test/security_solution_cypress/cypress/tasks/expandable_flyout  @elastic/
 
 ## Security Solution sub teams
 # security-defend-workflows
+/x-pack/test/security_solution_ftr @elastic/security-defend-workflows
 /x-pack/test/osquery_cypress @elastic/security-defend-workflows
 /x-pack/test/api_integration/apis/osquery @elastic/security-defend-workflows
 /x-pack/plugins/security_solution/public/management/ @elastic/security-defend-workflows
