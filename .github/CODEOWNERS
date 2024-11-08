@@ -1707,6 +1707,7 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 
 # Kibana Platform Security
 # security
+/x-pack/test/functional/page_objects/user_profile_page.ts @elastic/kibana-security
 /x-pack/test/functional/page_objects/space_selector_page.ts @elastic/kibana-security
 /x-pack/test/functional/page_objects/security_page.ts @elastic/kibana-security
 /x-pack/test/functional/page_objects/role_mappings_page.ts @elastic/kibana-security
