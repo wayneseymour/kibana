@@ -1297,7 +1297,7 @@ packages/kbn-monaco/src/esql
 
 # Fleet
 /x-pack/test/api_integration/services/fleet_and_agents.ts @elastic/fleet
-/x-pack/test/fleet_api_integration/ @elastic/fleet
+/x-pack/test/fleet_api_integration @elastic/fleet
 /x-pack/test/fleet_packages @elastic/fleet
 /test/api_integration/apis/custom_integration/*.ts @elastic/fleet
 /x-pack/test/fleet_api_integration
