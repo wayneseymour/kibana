@@ -1620,6 +1620,7 @@ x-pack/test/api_integration/deployment_agnostic/services/ @elastic/appex-qa
 x-pack/test/**/deployment_agnostic/ @elastic/appex-qa #temporarily to monitor tests migration
 
 # Core
+/x-pack/test/ftr_apis/common @elastic/kibana-core
 /x-pack/test/functional/page_objects/navigational_search.ts @elastic/kibana-core
 /x-pack/test/stack_functional_integration/apps/savedobjects_upgrade_testing @elastic/kibana-core
 /x-pack/test/functional/page_objects/status_page.ts @elastic/kibana-core
@@ -1978,6 +1979,7 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 #CC# /x-pack/plugins/cross_cluster_replication/ @elastic/kibana-management
 
 # Security Solution
+/x-pack/test/functional/es_archives/rule_exceptions @elastic/security-solution # Assigned per https://github.com/elastic/kibana/pull/199795/files/ae80bb252bc71f787c122849fcb9b01e386fc5e9#r1840233040
 /x-pack/test/functional_solution_sidenav/tests/security_sidenav.ts @elastic/security-solution
 /x-pack/test/common/utils/security_solution/index.ts @elastic/security-solution
 /x-pack/test/plugin_functional/plugins/resolver_test @elastic/security-solution
