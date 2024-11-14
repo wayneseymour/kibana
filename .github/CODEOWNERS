@@ -1810,6 +1810,7 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 /packages/core/http/core-http-server-internal/src/cdn_config/ @elastic/kibana-security @elastic/kibana-core
 #CC# /x-pack/plugins/security/ @elastic/kibana-security
 
+# Merged already
 # Response Ops team
 /x-pack/test/functional/page_objects/maintenance_windows_page.ts @elastic/response-ops
 /x-pack/test/functional_with_es_ssl/config.base.ts @elastic/response-ops # Assigned per https://github.com/elastic/kibana/pull/197070
