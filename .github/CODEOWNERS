@@ -1104,6 +1104,7 @@ x-pack/test_serverless/api_integration/test_suites/common/platform_security @ela
 /x-pack/test_serverless/functional/test_suites/common/management/data_views @elastic/kibana-data-discovery
 src/plugins/discover/public/context_awareness/profile_providers/security @elastic/kibana-data-discovery @elastic/security-threat-hunting-investigations
 
+# PR https://github.com/elastic/kibana/pull/200142
 # Platform Docs
 /x-pack/test/functional/services/sample_data @elastic/platform-docs
 /x-pack/test_serverless/functional/test_suites/security/screenshot_creation/index.ts @elastic/platform-docs
