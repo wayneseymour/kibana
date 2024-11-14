@@ -1321,6 +1321,7 @@ packages/kbn-monaco/src/esql
 /x-pack/plugins/fleet/server/services/elastic_agent_manifest.ts @elastic/fleet @elastic/obs-cloudnative-monitoring
 /x-pack/test_serverless/**/test_suites/**/fleet/ @elastic/fleet
 
+# PR https://github.com/elastic/kibana/pull/200182
 # APM
 /x-pack/test/stack_functional_integration/apps/apm @elastic/obs-ux-infra_services-team @elastic/obs-ux-logs-team
 /x-pack/test/common/services/apm_synthtrace_kibana_client.ts @elastic/obs-ux-infra_services-team @elastic/obs-ux-logs-team
