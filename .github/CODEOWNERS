@@ -1462,6 +1462,7 @@ packages/kbn-monaco/src/esql
 /x-pack/test/functional/services/transform/ @elastic/ml-ui
 /x-pack/test/functional_basic/apps/transform/ @elastic/ml-ui
 
+# PR https://github.com/elastic/kibana/pull/200214
 # Maps
 #CC# /x-pack/plugins/maps/ @elastic/kibana-gis
 /x-pack/test/upgrade/services/maps_upgrade_services.ts @elastic/kibana-gis
