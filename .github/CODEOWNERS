@@ -1370,7 +1370,8 @@ packages/kbn-monaco/src/esql
 /src/plugins/unified_doc_viewer/public/components/doc_viewer_logs_overview @elastic/obs-ux-logs-team
 /x-pack/test/api_integration/apis/logs_shared @elastic/obs-ux-logs-team
 
-# # Observability-ui
+# PR https://github.com/elastic/kibana/pull/200185
+# Observability-ui
 /x-pack/test_serverless/api_integration/test_suites/observability/index.ts @elastic/observability-ui
 /x-pack/test/functional_solution_sidenav/tests/observability_sidenav.ts @elastic/observability-ui
 /x-pack/test/functional/page_objects/observability_page.ts @elastic/observability-ui
