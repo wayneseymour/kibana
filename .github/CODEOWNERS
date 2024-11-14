@@ -1034,6 +1034,7 @@ x-pack/test_serverless/api_integration/test_suites/common/platform_security @ela
 /x-pack/plugins/entity_manager @elastic/obs-entities
 /x-pack/test/api_integration/apis/entity_manager @elastic/obs-entities
 
+# PR https://github.com/elastic/kibana/pull/200132
 # Data Discovery
 /test/functional/fixtures/es_archiver/alias @elastic/kibana-data-discovery
 /test/functional/page_objects/context_page.ts @elastic/kibana-data-discovery
@@ -1492,6 +1493,7 @@ packages/kbn-monaco/src/esql
 /.eslintrc.js @elastic/kibana-operations
 /.eslintignore @elastic/kibana-operations
 
+# PR https://github.com/elastic/kibana/pull/199767
 # QA - Appex QA
 /test/server_integration/services/index.js @elastic/appex-qa
 /x-pack/test/stack_functional_integration/configs/config.stack_functional_integration_base.js @elastic/appex-qa
@@ -1751,9 +1753,9 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 /src/core/public/i18n/  @elastic/kibana-localization @elastic/kibana-core
 #CC# /x-pack/plugins/translations/ @elastic/kibana-localization @elastic/kibana-core
 
+# PR https://github.com/elastic/kibana/pull/199795
 # Kibana Platform Security
 # security
-/ @elastic/kibana-security
 /x-pack/test_serverless/functional/test_suites/observability/role_management @elastic/kibana-security
 /x-pack/test/functional/page_objects/user_profile_page.ts @elastic/kibana-security
 /x-pack/test/functional/page_objects/space_selector_page.ts @elastic/kibana-security
@@ -1874,6 +1876,7 @@ x-pack/plugins/cloud_integrations/cloud_full_story/server/config.ts @elastic/kib
 /x-pack/test/functional/es_archives/cases/signals/default @elastic/response-ops
 /x-pack/test/functional/es_archives/cases/signals/hosts_users @elastic/response-ops
 
+# https://github.com/elastic/kibana/pull/200013
 # Enterprise Search
 # search
 /x-pack/test/functional_solution_sidenav/tests/search_sidenav.ts @elastic/search-kibana
@@ -2369,6 +2372,7 @@ x-pack/plugins/security_solution/server/lib/security_integrations @elastic/secur
 /x-pack/plugins/security_solution_ess/**/*.scss @elastic/security-design
 /x-pack/plugins/security_solution_serverless/**/*.scss @elastic/security-design
 
+# https://github.com/elastic/kibana/pull/199783
 # Logstash
 /x-pack/test/functional/services/pipeline_* @elastic/logstash
 /x-pack/test/functional/page_objects/logstash_page.ts @elastic/logstash
@@ -2392,6 +2396,7 @@ x-pack/test/profiling_api_integration @elastic/obs-ux-infra_services-team
 # Observability shared profiling
 x-pack/plugins/observability_solution/observability_shared/public/components/profiling @elastic/obs-ux-infra_services-team
 
+# PR https://github.com/elastic/kibana/pull/199779
 # Shared UX
 /test/functional/apps/kibana_overview @elastic/appex-sharedux
 /x-pack/test/functional_solution_sidenav/config.ts @elastic/appex-sharedux
