@@ -1379,6 +1379,7 @@ packages/kbn-monaco/src/esql
 ### END Observability Plugins
 
 # Presentation
+/test/functional/services/inspector.ts @elastic/kibana-presentation
 /x-pack/test/functional/services/canvas_element.ts @elastic/kibana-presentation
 /x-pack/test/functional/page_objects/canvas_page.ts @elastic/kibana-presentation
 /x-pack/test/accessibility/apps/group3/canvas.ts @elastic/kibana-presentation
