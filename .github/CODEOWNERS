@@ -1421,6 +1421,7 @@ packages/kbn-monaco/src/esql
 /x-pack/test/functional/es_archives/canvas/logstash_lens @elastic/kibana-presentation
 #CC# /src/plugins/kibana_react/public/code_editor/ @elastic/kibana-presentation
 
+# PR https://github.com/elastic/kibana/pull/200212
 # Machine Learning
 /x-pack/test/functional_with_es_ssl/apps/discover_ml_uptime/config.ts @elastic/ml-ui
 /x-pack/test/stack_functional_integration/apps/ml @elastic/ml-ui
