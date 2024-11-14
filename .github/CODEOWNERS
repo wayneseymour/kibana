@@ -1196,6 +1196,7 @@ packages/kbn-monaco/src/esql
 
 ### Observability Plugins
 
+# PR https://github.com/elastic/kibana/pull/200147
 # Observability AI Assistant
 /x-pack/test_serverless/api_integration/test_suites/common/data_usage @elastic/obs-ai-assistant
 /x-pack/test_serverless/functional/test_suites/common/data_usage @elastic/obs-ai-assistant
