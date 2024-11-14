@@ -1035,6 +1035,9 @@ x-pack/test_serverless/api_integration/test_suites/common/platform_security @ela
 /x-pack/test/api_integration/apis/entity_manager @elastic/obs-entities
 
 # Data Discovery
+/test/functional/fixtures/es_archiver/alias @elastic/kibana-data-discovery
+/test/functional/page_objects/context_page.ts @elastic/kibana-data-discovery
+/test/functional/services/data_views.ts @elastic/kibana-data-discovery
 /test/functional/services/saved_objects_finder.ts @elastic/kibana-data-discovery
 /test/functional/page_objects/unified_search_page.ts @elastic/kibana-data-discovery
 /test/plugin_functional/plugins/index_patterns @elastic/kibana-data-discovery
@@ -1107,6 +1110,7 @@ src/plugins/discover/public/context_awareness/profile_providers/security @elasti
 /x-pack/test/screenshot_creation @elastic/platform-docs
 
 # Visualizations
+/test/functional/apps/getting_started/*.ts @elastic/kibana-visualizations # Assigned per https://github.com/elastic/kibana/pull/199767#discussion_r1840485031
 /x-pack/test/upgrade/apps/graph @elastic/kibana-visualizations
 /x-pack/test/functional/page_objects/log_wrapper.ts @elastic/kibana-visualizations # Assigned per https://github.com/elastic/kibana/pull/36437
 /x-pack/test/functional/page_objects/graph_page.ts @elastic/kibana-visualizations
@@ -1266,6 +1270,7 @@ packages/kbn-monaco/src/esql
 /x-pack/test/functional/apps/infra/logs @elastic/obs-ux-logs-team
 
 # Observability UX management team
+/x-pack/test/api_integration/services/data_view_api.ts @elastic/obs-ux-management-team
 /x-pack/test/api_integration/services/slo.ts @elastic/obs-ux-management-team
 /x-pack/test/functional/services/slo @elastic/obs-ux-management-team
 /x-pack/test/functional/apps/slo @elastic/obs-ux-management-team
@@ -1902,7 +1907,6 @@ x-pack/test/api_integration/apis/management/index_management/inference_endpoints
 /x-pack/test/functional/page_objects/grok_debugger_page.ts @elastic/kibana-management
 /x-pack/test/functional/page_objects/cross_cluster_replication_page.ts @elastic/kibana-management
 /x-pack/test/functional/fixtures/ingest_pipeline_example_mapping.csv @elastic/kibana-management
-/x-pack/test/api_integration/services/data_view_api.ts @elastic/kibana-management
 /x-pack/test/functional/apps/snapshot_restore @elastic/kibana-management
 /x-pack/test/functional/apps/painless_lab @elastic/kibana-management
 /test/functional/services/data_views.ts @elastic/kibana-management
