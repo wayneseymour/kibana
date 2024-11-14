@@ -1477,6 +1477,7 @@ packages/kbn-monaco/src/esql
 /x-pack/plugins/stack_alerts/public/rule_types/geo_containment @elastic/kibana-gis
 #CC# /x-pack/plugins/file_upload @elastic/kibana-gis
 
+# PR https://github.com/elastic/kibana/pull/200217
 # Operations
 /test/package @elastic/kibana-operations
 /test/package/roles @elastic/kibana-operations
