@@ -1111,6 +1111,7 @@ src/plugins/discover/public/context_awareness/profile_providers/security @elasti
 /x-pack/test_serverless/functional/test_suites/security/config.screenshots.ts @elastic/platform-docs
 /x-pack/test/screenshot_creation @elastic/platform-docs
 
+# PR https://github.com/elastic/kibana/pull/200144
 # Visualizations
 /test/functional/apps/getting_started/*.ts @elastic/kibana-visualizations # Assigned per https://github.com/elastic/kibana/pull/199767#discussion_r1840485031
 /x-pack/test/upgrade/apps/graph @elastic/kibana-visualizations
