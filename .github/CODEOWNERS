@@ -1298,6 +1298,7 @@ packages/kbn-monaco/src/esql
 /x-pack/test/api_integration/deployment_agnostic/services/slo_api @elastic/obs-ux-management-team
 /x-pack/test_serverless/**/test_suites/observability/infra/ @elastic/obs-ux-infra_services-team
 
+# PR https://github.com/elastic/kibana/pull/200178
 # Elastic Stack Monitoring
 /x-pack/test/functional/page_objects/monitoring_page.ts @elastic/stack-monitoring
 /x-pack/test/functional/es_archives/monitoring @elastic/stack-monitoring
