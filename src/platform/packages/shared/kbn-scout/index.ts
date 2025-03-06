@@ -51,3 +51,11 @@ export type { Locator } from 'playwright/test';
 export { measurePerformance, measurePerformanceAsync } from './src/common';
 
 export { scoutApiTestConfig, clients } from './src/jest_api_tests';
+
+export {
+  expect as jestApiExpect,
+  it as jestApiIt,
+  describe as jestApiDescribe,
+  afterApiAll as jestApiAfterAll,
+  beforeAll as jestApiBeforeAll,
+} from '@jest/globals';

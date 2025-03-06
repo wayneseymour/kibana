@@ -5,25 +5,33 @@
  * 2.0.
  */
 
-import { tags, clients } from '@kbn/scout';
+import {
+  tags,
+  clients,
+  jestApiExpect,
+  jestApiDescribe,
+  jestApiIt,
+  jestApiBeforeAll,
+  jestApiAfterAll,
+} from '@kbn/scout';
 import { ES_ARCHIVES, KBN_ARCHIVES } from './fixtures/constants';
 
-describe(`${tags.DEPLOYMENT_AGNOSTIC.join(',')}`, () => {
-  describe(`maps_telemetry`, () => {
+jestApiDescribe(`${tags.DEPLOYMENT_AGNOSTIC.join(',')}`, () => {
+  jestApiDescribe(`maps_telemetry`, () => {
     const { kbnClient, esArchiver } = clients();
-    beforeAll(async () => {
+    jestApiBeforeAll(async () => {
       await esArchiver.loadIfNeeded(ES_ARCHIVES.LOGSTASH);
       await kbnClient.importExport.load(KBN_ARCHIVES.MAPS);
       await esArchiver.loadIfNeeded(ES_ARCHIVES.MAPS_DATA);
     });
-    afterAll(async () => {
+    jestApiAfterAll(async () => {
       await esArchiver.unload(ES_ARCHIVES.LOGSTASH);
       await esArchiver.unload(ES_ARCHIVES.MAPS_DATA);
       await kbnClient.importExport.unload(KBN_ARCHIVES.MAPS);
     });
 
-    it('should return the correct telemetry values for map saved objects', async () => {
-      expect(1).toBeTruthy();
+    jestApiIt('should return the correct telemetry values for map saved objects', async () => {
+      jestApiExpect(1).toBeTruthy();
       // const {
       //   body: [{ stats: apiResponse }],
       // } = await supertest()

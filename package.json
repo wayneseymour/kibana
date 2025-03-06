@@ -1346,6 +1346,7 @@
     "@emotion/jest": "^11.11.0",
     "@frsource/cypress-plugin-visual-regression-diff": "^3.3.10",
     "@jest/console": "^29.7.0",
+    "@jest/globals": "^29.7.0",
     "@jest/reporters": "^29.7.0",
     "@jest/transform": "^29.6.1",
     "@jest/types": "^29.6.3",
